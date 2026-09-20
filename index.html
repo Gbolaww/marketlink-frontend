@@ -7,9 +7,505 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,500&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/style.css">
   </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
+<body>
+
+    <!-- NAVBAR -->
+    <header class="navbar">
+        <div class="logo">
+            <span>✦</span> MarketLink
+        </div>
+
+        <nav>
+            <a href="#">Home</a>
+            <a href="#categories">Categories</a>
+            <a href="#products">Marketplace</a>
+            <a href="#how">How it works</a>
+        </nav>
+
+        <div class="nav-buttons">
+            <button class="login">Log in</button>
+            <button class="join">Join MarketLink</button>
+        </div>
+    </header>
+
+
+    <!-- HERO -->
+    <section class="hero">
+
+        <div class="hero-content">
+
+            <div class="eyebrow">
+                🇳🇬 Nigeria's local marketplace
+            </div>
+
+            <h1>
+                Find it in the
+                <span>market.</span>
+            </h1>
+
+            <p>
+                Search products from real sellers near you.
+                Compare prices, check locations and connect
+                with sellers you can trust.
+            </p>
+
+            <!-- SEARCH -->
+            <div class="search-box">
+
+                <div class="search-input">
+                    🔍
+                    <input
+                        type="text"
+                        placeholder="What are you looking for?"
+                    >
+                </div>
+
+                <div class="location">
+                    🗺️
+                    <span>Ogun, Nigeria</span>
+                </div>
+
+                <button class="search-btn">
+                    Search
+                </button>
+
+            </div>
+
+            <div class="popular">
+                <strong>Popular:</strong>
+                <span>Phones</span>
+                <span>Laptops</span>
+                <span>Fashion</span>
+                <span>Furniture</span>
+            </div>
+
+        </div>
+
+        <div class="hero-card">
+
+            <div class="card-top">
+                <span>📈 Trending </span>
+                <span class="verified">✓ Verified sellers</span>
+            </div>
+
+            <div class="mini-product">
+
+                <div class="product-image phone">
+                    📱
+                </div>
+
+                <div>
+                    <h3>bryan iphone</h3>
+                    <p>Mowe, Ogun State</p>
+
+                    <div class="price">
+                        ₦620,000
+                    </div>
+
+                    <small>Available now</small>
+                </div>
+
+            </div>
+
+            <div class="mini-product">
+
+                <div class="product-image laptop">
+                    💻
+                </div>
+
+                <div>
+                    <h3>Gbolahan EliteBook</h3>
+                    <p>Mowe, Ogun state</p>
+
+                    <div class="price">
+                        ₦385,000
+                    </div>
+
+                    <small>Verified seller</small>
+                </div>
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- CATEGORIES -->
+    <section class="section" id="categories">
+
+        <div class="section-heading">
+            <div>
+                <span class="eyebrow">EXPLORE</span>
+                <h2>Shop by category</h2>
+            </div>
+
+            <a href="#">View all →</a>
+        </div>
+
+        <div class="categories">
+
+            <div class="category">
+                <div class="category-icon">📱</div>
+                <h3>Phones</h3>
+                <p>2,400+ listings</p>
+            </div>
+
+            <div class="category">
+                <div class="category-icon">💻</div>
+                <h3>Computers</h3>
+                <p>1,200+ listings</p>
+            </div>
+
+            <div class="category">
+                <div class="category-icon">👕</div>
+                <h3>Fashion</h3>
+                <p>3,800+ listings</p>
+            </div>
+
+            <div class="category">
+                <div class="category-icon">🛋️</div>
+                <h3>Furniture</h3>
+                <p>900+ listings</p>
+            </div>
+
+            <div class="category">
+                <div class="category-icon">🚗</div>
+                <h3>Vehicles</h3>
+                <p>700+ listings</p>
+            </div>
+
+            <div class="category">
+                <div class="category-icon">🏠</div>
+                <h3>Property</h3>
+                <p>1,100+ listings</p>
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- PRODUCTS -->
+    <section class="section products-section" id="products">
+
+        <div class="section-heading">
+
+            <div>
+                <span class="eyebrow">NEAR YOU</span>
+                <h2>Popular listings</h2>
+            </div>
+
+            <a href="#">Browse marketplace →</a>
+
+        </div>
+
+
+        <div class="products">
+
+            <!-- PRODUCT 1 -->
+            <article class="product-card">
+
+                <div class="product-photo phone-photo">
+                    📱
+                    <span class="condition">Used</span>
+                    <button class="heart">♡</button>
+                </div>
+
+                <div class="product-info">
+
+                    <p class="category-label">Mobile Phones</p>
+
+                    <h3> iphone 18pro 128GB</h3>
+
+                    <div class="product-price">
+                        ₦2,400,000
+                    </div>
+
+                    <div class="seller">
+                        <div class="seller-avatar">A</div>
+
+                        <div>
+                            <strong>Adam's Gadgets</strong>
+                            <p>Ogun state • 2.4 km away</p>
+                        </div>
+
+                        <span class="check">✓</span>
+                    </div>
+
+                </div>
+
+            </article>
+
+
+            <!-- PRODUCT 2 -->
+            <article class="product-card">
+
+                <div class="product-photo laptop-photo">
+                    💻
+                    <span class="condition">New</span>
+                    <button class="heart">♡</button>
+                </div>
+
+                <div class="product-info">
+
+                    <p class="category-label">Computers</p>
+
+                    <h3>HP EliteBook 840 G7</h3>
+
+                    <div class="product-price">
+                        ₦385,000
+                    </div>
+
+                    <div class="seller">
+                        <div class="seller-avatar">T</div>
+
+                        <div>
+                            <strong>TechHub Jos</strong>
+                            <p>Rayfield • 4.1 km away</p>
+                        </div>
+
+                        <span class="check">✓</span>
+                    </div>
+
+                </div>
+
+            </article>
+
+
+            <!-- PRODUCT 3 -->
+            <article class="product-card">
+
+                <div class="product-photo shoe-photo">
+                    👟
+                    <span class="condition">New</span>
+                    <button class="heart">♡</button>
+                </div>
+
+                <div class="product-info">
+
+                    <p class="category-label">Fashion</p>
+
+                    <h3>Nike Air Max Sneakers</h3>
+
+                    <div class="product-price">
+                        ₦75,000
+                    </div>
+
+                    <div class="seller">
+                        <div class="seller-avatar">J</div>
+
+                        <div>
+                            <strong>J's Fashion</strong>
+                            <p>Terminus • 1.8 km away</p>
+                        </div>
+
+                        <span class="check">✓</span>
+                    </div>
+
+                </div>
+
+            </article>
+
+
+            <!-- PRODUCT 4 -->
+            <article class="product-card">
+
+                <div class="product-photo chair-photo">
+                    🛋️
+                    <span class="condition">New</span>
+                    <button class="heart">♡</button>
+                </div>
+
+                <div class="product-info">
+
+                    <p class="category-label">Furniture</p>
+
+                    <h3>Modern Living Room Set</h3>
+
+                    <div class="product-price">
+                        ₦450,000
+                    </div>
+
+                    <div class="seller">
+                        <div class="seller-avatar">H</div>
+
+                        <div>
+                            <strong>HomeStyle NG</strong>
+                            <p>Bukuru • 5.2 km away</p>
+                        </div>
+
+                        <span class="check">✓</span>
+                    </div>
+
+                </div>
+
+            </article>
+
+        </div>
+
+    </section>
+
+
+    <!-- HOW IT WORKS -->
+    <section class="how" id="how">
+
+        <div class="how-heading">
+
+            <span class="eyebrow">SIMPLE & SAFE</span>
+
+            <h2>
+                Your local market,
+                <span>connected.</span>
+            </h2>
+
+            <p>
+                MarketLink makes it easier to discover products
+                around you and connect with trusted local sellers.
+            </p>
+
+        </div>
+
+
+        <div class="steps">
+
+            <div class="step">
+
+                <div class="step-number">01</div>
+
+                <div>
+                    <h3>Search</h3>
+                    <p>
+                        Search for any product and choose your
+                        location.
+                    </p>
+                </div>
+
+            </div>
+
+
+            <div class="step">
+
+                <div class="step-number">02</div>
+
+                <div>
+                    <h3>Compare</h3>
+                    <p>
+                        Compare prices and sellers before you buy.
+                    </p>
+                </div>
+
+            </div>
+
+
+            <div class="step">
+
+                <div class="step-number">03</div>
+
+                <div>
+                    <h3>Connect</h3>
+                    <p>
+                        Contact sellers and arrange your purchase.
+                    </p>
+                </div>
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- TRUST -->
+    <section class="trust">
+
+        <div>
+            <span class="trust-icon">✓</span>
+
+            <div>
+                <h3>Verified sellers</h3>
+                <p>Buy with more confidence.</p>
+            </div>
+        </div>
+
+        <div>
+            <span class="trust-icon">📍</span>
+
+            <div>
+                <h3>Local listings</h3>
+                <p>Find sellers close to you.</p>
+            </div>
+        </div>
+
+        <div>
+            <span class="trust-icon">₦</span>
+
+            <div>
+                <h3>Compare prices</h3>
+                <p>See what's available nearby.</p>
+            </div>
+        </div>
+
+    </section>
+
+
+    <!-- FOOTER -->
+    <footer>
+
+        <div class="footer-main">
+
+            <div class="footer-brand">
+
+                <div class="logo">
+                    <span>✦</span> MarketLink
+                </div>
+
+                <p>
+                    Nigeria's local marketplace for finding
+                    products, comparing prices and connecting
+                    with sellers nearby.
+                </p>
+
+            </div>
+
+
+            <div>
+                <h4>Marketplace</h4>
+                <a href="#">Browse products</a>
+                <a href="#">Categories</a>
+                <a href="#">Nearby sellers</a>
+                <a href="#">Sell on MarketLink</a>
+            </div>
+
+
+            <div>
+                <h4>Company</h4>
+                <a href="#">About us</a>
+                <a href="#">How it works</a>
+                <a href="#">Safety</a>
+                <a href="#">Contact</a>
+            </div>
+
+
+            <div>
+                <h4>Support</h4>
+                <a href="#">Help centre</a>
+                <a href="#">Terms</a>
+                <a href="#">Privacy</a>
+                <a href="#">Report a listing</a>
+            </div>
+
+        </div>
+
+
+        <div class="footer-bottom">
+            <span>© 2026 MarketLink. All rights reserved.</span>
+            <span>Made for local commerce in Nigeria 🇳🇬</span>
+        </div>
+
+    </footer>
+
   </body>
 </html>
