@@ -1,6 +1,10 @@
 import axios from 'axios'
 
-const BASE_URL = 'http://127.0.0.1:8000'
+const BASE_URL: string = import.meta.env.VITE_API_URL ?? 'http://127.0.0.1:8000'
+
+/** Turn an API-relative path such as /uploads/x.jpg into a full URL the browser can load. */
+export const assetUrl = (path?: string | null): string | null =>
+  path ? (/^https?:\/\//.test(path) ? path : BASE_URL.replace(/\/$/, '') + path) : null
 
 export const api = axios.create({
   baseURL: BASE_URL,
@@ -17,7 +21,9 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
+    // A 401 from an /auth/* call (wrong code, wrong password) is a form error, not an expired session.
+    const isAuthCall = String(error.config?.url ?? '').startsWith('/auth/') && error.config?.url !== '/auth/me'
+    if (error.response?.status === 401 && localStorage.getItem('access_token') && !isAuthCall) {
       localStorage.removeItem('access_token')
       localStorage.removeItem('refresh_token')
       localStorage.removeItem('user')
@@ -35,6 +41,8 @@ export const authApi = {
   mfaVerify: (data: { mfa_token: string; code: string }) =>
     api.post('/auth/mfa/login-verify', data),
   me: () => api.get('/auth/me'),
+  mfaSetup: () => api.post('/auth/mfa/setup'),
+  mfaConfirm: (code: string) => api.post('/auth/mfa/setup/confirm', { code }),
   logout: (refresh_token: string) =>
     api.post('/auth/logout', { refresh_token }),
 }
@@ -55,6 +63,15 @@ export const vendorApi = {
     longitude: number
   }) => api.post('/vendors/me', data),
   getMyProducts: () => api.get('/vendors/me/products'),
+  updateProduct: (
+    productId: string,
+    data: { name?: string; description?: string | null; price_minor_units?: number; stock_quantity?: number | null; is_active?: boolean },
+  ) => api.patch('/vendors/me/products/' + productId, data),
+  uploadProductImage: (productId: string, file: File) => {
+    const form = new FormData()
+    form.append('file', file)
+    return api.post('/vendors/me/products/' + productId + '/image', form)
+  },
   createProduct: (data: {
     name: string
     description?: string
@@ -68,14 +85,28 @@ export const vendorApi = {
   submitBankDetails: (data: { account_number: string; bank_code: string }) =>
     api.post('/vendors/me/bank-details', data),
   getBanks: () => api.get('/vendors/banks'),
+  getBankDetails: () => api.get('/vendors/me/bank-details'),
+}
+
+export const productApi = {
+  get: (id: string) => api.get('/products/' + id),
+}
+
+export interface DeliveryDetails {
+  name: string
+  phone: string
+  address: string
+  city: string
+  state: string
+  notes?: string
 }
 
 export const orderApi = {
-  createOrder: (data: {
-    vendor_id: string
-    items: { product_id: string; quantity: number }[]
-  }) => api.post('/orders', data),
+  createOrder: (data: { items: { product_id: string; quantity: number }[]; delivery?: DeliveryDetails }) =>
+    api.post('/orders', data),
   getMyOrders: () => api.get('/orders/me'),
+  /** Ask the backend to confirm the payment directly with Paystack (does not rely on the webhook). */
+  verifyPayment: (reference: string) => api.post('/orders/verify', { reference }),
 }
 
 export const adminApi = {

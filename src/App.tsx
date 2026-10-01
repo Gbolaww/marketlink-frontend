@@ -1,8 +1,15 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { getUser, isLoggedIn } from '@/lib/auth'
+import Layout from '@/components/layout/Layout'
 import LandingPage from '@/pages/LandingPage'
 import AuthPage from '@/pages/AuthPage'
 import SearchPage from '@/pages/SearchPage'
+import ProductPage from '@/pages/ProductPage'
+import OrderCallbackPage from '@/pages/OrderCallbackPage'
+import SecurityPage from '@/pages/SecurityPage'
+import CartPage from '@/pages/CartPage'
+import CheckoutPage from '@/pages/CheckoutPage'
+import OrderPage from '@/pages/OrderPage'
 import AccountPage from '@/pages/AccountPage'
 import VendorDashboard from '@/pages/VendorDashboard'
 import AdminPage from '@/pages/AdminPage'
@@ -19,9 +26,22 @@ export default function App() {
   return (
     <BrowserRouter>
       <Routes>
+        <Route element={<Layout />}>
         <Route path="/" element={<LandingPage />} />
         <Route path="/auth" element={<AuthPage />} />
         <Route path="/search" element={<SearchPage />} />
+        <Route path="/product/:id" element={<ProductPage />} />
+        <Route path="/cart" element={<CartPage />} />
+        <Route path="/checkout" element={
+          <ProtectedRoute role="customer"><CheckoutPage /></ProtectedRoute>
+        } />
+        <Route path="/orders/:id" element={
+          <ProtectedRoute role="customer"><OrderPage /></ProtectedRoute>
+        } />
+        <Route path="/security" element={<ProtectedRoute><SecurityPage /></ProtectedRoute>} />
+        <Route path="/orders/callback" element={
+          <ProtectedRoute role="customer"><OrderCallbackPage /></ProtectedRoute>
+        } />
         <Route path="/account" element={
           <ProtectedRoute role="customer"><AccountPage /></ProtectedRoute>
         } />
@@ -31,6 +51,7 @@ export default function App() {
         <Route path="/admin" element={
           <ProtectedRoute role="admin"><AdminPage /></ProtectedRoute>
         } />
+        </Route>
       </Routes>
     </BrowserRouter>
   )
