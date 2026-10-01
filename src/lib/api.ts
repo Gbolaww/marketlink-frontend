@@ -71,10 +71,8 @@ export const vendorApi = {
 }
 
 export const orderApi = {
-  createOrder: (data: {
-    vendor_id: string
-    items: { product_id: string; quantity: number }[]
-  }) => api.post('/orders', data),
+  createOrder: (data: { items: { product_id: string; quantity: number }[] }) =>
+    api.post('/orders', data),
   getMyOrders: () => api.get('/orders/me'),
 }
 

@@ -9,7 +9,7 @@ import RatingStars from '@/components/RatingStars'
 import { buttonClass } from '@/components/ui/button-styles'
 import { Input } from '@/components/ui/input'
 import { searchApi } from '@/lib/api'
-import { toProduct } from '@/lib/products'
+import { rememberProducts, toProduct } from '@/lib/products'
 import { CATEGORIES, DEFAULT_ORIGIN } from '@/lib/categories'
 import { formatDistance } from '@/lib/utils'
 
@@ -29,7 +29,7 @@ export default function LandingPage() {
     queryFn: async () => {
       const { data } = await searchApi.search({ ...DEFAULT_ORIGIN, radius_km: 100 })
       const rows = (Array.isArray(data) ? data : (data?.results ?? [])) as Record<string, unknown>[]
-      return rows.map(toProduct) as ProductResult[]
+      return rememberProducts(rows.map(toProduct)) as ProductResult[]
     },
   })
 

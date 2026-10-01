@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query'
 import { MapPin, Package, Star } from 'lucide-react'
 import { EmptyState, QueryState } from '@/components/dashboard'
 import { Badge } from '@/components/ui/badge'
+import { buttonClass } from '@/components/ui/button-styles'
 import { Tabs } from '@/components/ui/tabs'
 import { orderApi } from '@/lib/api'
 import { getUser } from '@/lib/auth'
@@ -53,7 +54,12 @@ export default function AccountPage() {
                               <p className="font-semibold">Order {String(pick(o, 'order_number') ?? String(o.id).slice(0, 8))}</p>
                               <p className="text-sm text-muted-foreground">{formatDate(o.created_at)}</p>
                             </div>
-                            <Badge>{ORDER_STATUS[status] ?? status}</Badge>
+                            <div className="flex items-center gap-3">
+                              <Badge>{ORDER_STATUS[status] ?? status}</Badge>
+                              {status === 'pending' && typeof o.checkout_url === 'string' && (
+                                <a href={o.checkout_url} className={buttonClass('default', 'sm')}>Pay now</a>
+                              )}
+                            </div>
                           </div>
                           {items.length > 0 && (
                             <ul className="mt-4 space-y-2 text-sm text-muted-foreground">

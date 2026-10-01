@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { Link, Outlet, useNavigate } from 'react-router-dom'
+import { useEffect, useState } from 'react'
+import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { LogOut, Menu, Search, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { buttonClass } from '@/components/ui/button-styles'
@@ -115,6 +115,11 @@ function Footer() {
 }
 
 export default function Layout() {
+  const { pathname } = useLocation()
+  useEffect(() => {
+    window.scrollTo(0, 0)
+  }, [pathname])
+
   return (
     <div className="flex min-h-screen flex-col">
       <Header />

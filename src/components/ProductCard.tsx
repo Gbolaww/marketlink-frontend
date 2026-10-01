@@ -10,6 +10,8 @@ export interface ProductResult {
   currency?: string
   image_url?: string | null
   business_name?: string
+  description?: string | null
+  vendor_id?: string
   rating_avg?: number | null
   rating_count?: number | null
   city?: string | null
@@ -20,7 +22,7 @@ export default function ProductCard({ item }: { item: ProductResult }) {
   const location = [item.city, formatDistance(item.distance_km)].filter(Boolean).join(' · ')
   return (
     <Link
-      to={'/search?q=' + encodeURIComponent(item.name)}
+      to={'/product/' + item.product_id}
       className="group flex flex-col overflow-hidden rounded-xl border border-border bg-card shadow-card transition-shadow hover:shadow-lift"
     >
       <div className="aspect-[4/3] w-full overflow-hidden bg-muted">

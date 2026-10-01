@@ -4,6 +4,8 @@ import Layout from '@/components/layout/Layout'
 import LandingPage from '@/pages/LandingPage'
 import AuthPage from '@/pages/AuthPage'
 import SearchPage from '@/pages/SearchPage'
+import ProductPage from '@/pages/ProductPage'
+import OrderCallbackPage from '@/pages/OrderCallbackPage'
 import AccountPage from '@/pages/AccountPage'
 import VendorDashboard from '@/pages/VendorDashboard'
 import AdminPage from '@/pages/AdminPage'
@@ -24,6 +26,10 @@ export default function App() {
         <Route path="/" element={<LandingPage />} />
         <Route path="/auth" element={<AuthPage />} />
         <Route path="/search" element={<SearchPage />} />
+        <Route path="/product/:id" element={<ProductPage />} />
+        <Route path="/orders/callback" element={
+          <ProtectedRoute role="customer"><OrderCallbackPage /></ProtectedRoute>
+        } />
         <Route path="/account" element={
           <ProtectedRoute role="customer"><AccountPage /></ProtectedRoute>
         } />
