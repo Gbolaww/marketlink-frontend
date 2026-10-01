@@ -42,6 +42,9 @@ interface Pose {
 }
 
 const STAND: Pose = { lean: 0, head: 0, thighA: 0, shinA: 4, thighB: 0, shinB: 4, armF: 2, foreF: -4, armB: -2, foreB: -6 }
+// Relaxed lean toward the form: weight forward, ankles crossed, elbow bent with the hand at his chin.
+const LEAN: Pose = { lean: 13, head: -3, thighA: 16, shinA: 8, thighB: -7, shinB: 3, armF: -34, foreF: -112, armB: 8, foreB: -14 }
+const LEAN_STEP = 34 // px he shuffles in towards the form
 const CROUCH: Pose = { lean: 24, head: 14, thighA: -64, shinA: 114, thighB: -56, shinB: 104, armF: -46, foreF: -12, armB: -20, foreB: -30 }
 
 const rad = (d: number) => (d * Math.PI) / 180
@@ -342,8 +345,10 @@ export default function AuthIntro({ children }: { children: ReactNode }) {
         x = lerp(startX, stopX, k)
         m = v
       } else if (t < T.leave) {
-        x = stopX
-        m = 0
+        // After standing he shuffles up to the form (only when he stays beside it).
+        const k = staysBeside ? easeInOut((t - T.up) / 1.2) : 0
+        x = stopX + LEAN_STEP * k
+        m = 0.3 * Math.sin(Math.PI * k)
       } else {
         const [k, v] = startAndStop((t - T.leave) / leaveDur)
         x = lerp(stopX, endX, k)
@@ -357,10 +362,12 @@ export default function AuthIntro({ children }: { children: ReactNode }) {
       const crouchAmt = t < T.rise ? down : 1 - up
       if (crouchAmt > 0) pose = mix(pose, CROUCH, crouchAmt)
 
-      // Idle sway once he has stopped beside the form.
-      if (t > done) {
-        const s = Math.sin((t - done) * 1.7)
-        pose = { ...pose, lean: pose.lean + 1.2 * s, head: pose.head - 2 * s }
+      // Settle into the lean, then breathe gently.
+      if (staysBeside && t > T.up) {
+        const lean = easeInOut((t - T.up - 0.35) / 1.1)
+        pose = mix(pose, LEAN, lean)
+        const s = Math.sin((t - T.up) * 1.6) * lean
+        pose = { ...pose, lean: pose.lean + 0.7 * s, head: pose.head - 1.5 * s }
       }
 
       const man = r.man as SVGSVGElement | null
