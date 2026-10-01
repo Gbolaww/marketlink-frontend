@@ -85,6 +85,7 @@ export const vendorApi = {
   submitBankDetails: (data: { account_number: string; bank_code: string }) =>
     api.post('/vendors/me/bank-details', data),
   getBanks: () => api.get('/vendors/banks'),
+  getBankDetails: () => api.get('/vendors/me/bank-details'),
 }
 
 export const productApi = {

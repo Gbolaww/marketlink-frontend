@@ -190,30 +190,85 @@ function PhotoButton({ productId, hasPhoto, onDone }: { productId: string; hasPh
   )
 }
 
+/** The vendor's saved payout account, or null when none is set up yet (the API answers 404). */
+function useBankDetails(enabled = true) {
+  return useQuery({
+    queryKey: ['bank-details'],
+    enabled,
+    retry: false,
+    queryFn: async () => {
+      try {
+        return (await vendorApi.getBankDetails()).data as Row
+      } catch (err) {
+        if ((err as { response?: { status?: number } })?.response?.status === 404) return null
+        throw err
+      }
+    },
+  })
+}
+
 function BankDetails() {
+  const qc = useQueryClient()
+  const saved = useBankDetails()
   const banks = useQuery({ queryKey: ['banks'], queryFn: async () => list((await vendorApi.getBanks()).data, 'banks', 'data') })
+  const [changing, setChanging] = useState(false)
   const [bank, setBank] = useState('')
   const [account, setAccount] = useState('')
-  const save = useMutation({ mutationFn: () => vendorApi.submitBankDetails({ account_number: account, bank_code: bank }) })
+  const save = useMutation({
+    mutationFn: async () => (await vendorApi.submitBankDetails({ account_number: account, bank_code: bank })).data as Row,
+    onSuccess: () => {
+      setAccount('')
+      setChanging(false)
+      qc.invalidateQueries({ queryKey: ['bank-details'] })
+    },
+  })
+  const bankName = (code: unknown) => String(pick((banks.data ?? []).find((b) => String(pick(b, 'code', 'bank_code')) === String(code)), 'name', 'bank_name') ?? code ?? '')
+
+  if (saved.isLoading) return <div className="h-40 max-w-md animate-pulse rounded-xl bg-muted" />
+
+  if (saved.data && !changing) {
+    return (
+      <div className="max-w-md rounded-xl border border-border bg-card p-6 shadow-card">
+        <div className="flex items-start justify-between gap-3">
+          <h3 className="font-semibold">Payout bank account</h3>
+          <Badge className={saved.data.payouts_enabled ? 'bg-accent/10 text-accent' : ''}>{saved.data.payouts_enabled ? 'Payouts enabled' : 'Setting up'}</Badge>
+        </div>
+        <dl className="mt-4 space-y-3 text-sm">
+          <div><dt className="text-muted-foreground">Account name</dt><dd className="font-medium">{String(saved.data.account_name)}</dd></div>
+          <div><dt className="text-muted-foreground">Bank</dt><dd className="font-medium">{bankName(saved.data.bank_code)}</dd></div>
+          <div><dt className="text-muted-foreground">Account number</dt><dd className="font-mono font-medium">{String(saved.data.account_number_masked)}</dd></div>
+        </dl>
+        <p className="mt-4 text-xs text-muted-foreground">Your earnings are sent here when you mark an order fulfilled.</p>
+        <Button variant="outline" size="sm" className="mt-4" onClick={() => setChanging(true)}>Change account</Button>
+      </div>
+    )
+  }
+
   return (
     <form
       onSubmit={(e) => { e.preventDefault(); save.mutate() }}
       className="max-w-md space-y-4 rounded-xl border border-border bg-card p-6 shadow-card"
     >
-      <h3 className="font-semibold">Payout bank account</h3>
+      <h3 className="font-semibold">{saved.data ? 'Change payout account' : 'Add your payout bank account'}</h3>
+      {!saved.data && <p className="text-sm text-muted-foreground">We check the account with the bank so your money goes to the right place.</p>}
       <Field label="Bank">
         <select className="h-10 w-full rounded-lg border border-input bg-background px-3 text-sm" value={bank} onChange={(e) => setBank(e.target.value)} required>
-          <option value="">Select a bank</option>
+          <option value="">{banks.isLoading ? 'Loading banks…' : 'Select a bank'}</option>
           {(banks.data ?? []).map((b) => {
             const code = String(pick(b, 'code', 'bank_code') ?? '')
             return <option key={code} value={code}>{String(pick(b, 'name', 'bank_name') ?? code)}</option>
           })}
         </select>
       </Field>
-      <Field label="Account number"><Input inputMode="numeric" maxLength={10} value={account} onChange={(e) => setAccount(e.target.value)} required /></Field>
+      <Field label="Account number (10 digits)">
+        <Input inputMode="numeric" pattern="[0-9]{10}" maxLength={10} value={account} onChange={(e) => setAccount(e.target.value.replace(/\D/g, ''))} required />
+      </Field>
+      {banks.isError && <p role="alert" className="text-sm text-destructive">We couldn't load the list of banks. Please try again.</p>}
       {save.isError && <p role="alert" className="text-sm text-destructive">{apiError(save.error)}</p>}
-      {save.isSuccess && <p className="text-sm text-accent">Bank details saved.</p>}
-      <Button type="submit" disabled={save.isPending}>{save.isPending && <Loader2 className="animate-spin" />} Save bank details</Button>
+      <div className="flex gap-2">
+        <Button type="submit" disabled={save.isPending || account.length !== 10}>{save.isPending && <Loader2 className="animate-spin" />} Verify and save</Button>
+        {saved.data && <Button variant="ghost" onClick={() => setChanging(false)}>Cancel</Button>}
+      </div>
     </form>
   )
 }
@@ -239,10 +294,16 @@ export default function VendorDashboard() {
   const enabled = !!profile.data
   const products = useQuery({ queryKey: ['vendor-products'], enabled, queryFn: async () => list((await vendorApi.getMyProducts()).data, 'products', 'items') })
   const orders = useQuery({ queryKey: ['vendor-orders'], enabled, queryFn: async () => list((await vendorApi.getMyOrders()).data, 'orders', 'items') })
+  const bank = useBankDetails(enabled)
   const fulfil = useMutation({
-    mutationFn: (id: string) => vendorApi.fulfilOrder(id),
+    mutationFn: async (id: string) => (await vendorApi.fulfilOrder(id)).data as { payout_status?: string },
     onSuccess: () => qc.invalidateQueries({ queryKey: ['vendor-orders'] }),
   })
+  const payoutNote: Record<string, string> = {
+    processing: 'Order marked as fulfilled. Your payout is on its way to your bank account.',
+    awaiting_bank_details: 'Order marked as fulfilled. Add your bank account in the Payouts tab to receive this payment.',
+    failed: "Order marked as fulfilled, but we couldn't send the payout yet. It will need a retry.",
+  }
 
   if (profile.isLoading) return <div className="mx-auto max-w-6xl px-4 py-10"><div className="h-64 animate-pulse rounded-xl bg-muted" /></div>
   if (profile.isError) return <p className="py-24 text-center text-destructive">We couldn't load your store. Please try again.</p>
@@ -276,6 +337,13 @@ export default function VendorDashboard() {
           <p className="mt-1 text-muted-foreground">
             Products you add are saved, but they won't appear in the marketplace until MarketLink approves your store.
           </p>
+        </div>
+      )}
+
+      {status === 'approved' && bank.isSuccess && !bank.data && (
+        <div role="status" className="mt-6 rounded-xl border border-warning/40 bg-warning/10 px-5 py-4 text-sm">
+          <p className="font-semibold">Add your bank account to get paid</p>
+          <p className="mt-1 text-muted-foreground">Open the Payouts tab and add the account where your earnings should go. Orders you fulfil before then can't be paid out.</p>
         </div>
       )}
 
@@ -371,6 +439,9 @@ export default function VendorDashboard() {
                       ]
                     })}
                   />
+                  {fulfil.isSuccess && fulfil.data?.payout_status && (
+                    <p role="status" className="mt-3 rounded-lg bg-secondary px-4 py-2 text-sm">{payoutNote[fulfil.data.payout_status] ?? 'Order marked as fulfilled.'}</p>
+                  )}
                   {fulfil.isError && <p role="alert" className="mt-3 text-sm text-destructive">{apiError(fulfil.error)}</p>}
                 </QueryState>
               )
