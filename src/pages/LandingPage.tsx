@@ -9,7 +9,9 @@ import RatingStars from '@/components/RatingStars'
 import { buttonClass } from '@/components/ui/button-styles'
 import { Input } from '@/components/ui/input'
 import { searchApi } from '@/lib/api'
+import { toProduct } from '@/lib/products'
 import { CATEGORIES, DEFAULT_ORIGIN } from '@/lib/categories'
+import { formatDistance } from '@/lib/utils'
 
 const STEPS = [
   { icon: Search, title: 'Search text or photo', body: 'Type what you need, or upload a picture and we match it against vendor catalogues.' },
@@ -25,9 +27,9 @@ export default function LandingPage() {
   const featured = useQuery({
     queryKey: ['featured-products'],
     queryFn: async () => {
-      const { data } = await searchApi.search(DEFAULT_ORIGIN)
-      const rows: ProductResult[] = Array.isArray(data) ? data : (data?.results ?? [])
-      return rows
+      const { data } = await searchApi.search({ ...DEFAULT_ORIGIN, radius_km: 100 })
+      const rows = (Array.isArray(data) ? data : (data?.results ?? [])) as Record<string, unknown>[]
+      return rows.map(toProduct) as ProductResult[]
     },
   })
 
@@ -87,7 +89,7 @@ export default function LandingPage() {
 
       <section className="mx-auto max-w-6xl px-4 py-16">
         <div className="flex items-end justify-between gap-4">
-          <h2 className="text-2xl font-bold sm:text-3xl">Top rated right now</h2>
+          <h2 className="text-2xl font-bold sm:text-3xl">Products near you</h2>
           <Link to="/search" className="text-sm font-semibold text-primary hover:underline">See all products</Link>
         </div>
         <div className="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
@@ -134,8 +136,8 @@ export default function LandingPage() {
                     <BadgeCheck size={12} /> Verified
                   </span>
                 </div>
-                <p className="mt-2 text-sm text-muted-foreground">{v.city ?? 'Nigeria'}</p>
-                <div className="mt-3"><RatingStars value={v.rating_avg} count={v.rating_count} /></div>
+                <p className="mt-2 text-sm text-muted-foreground">{formatDistance(v.distance_km) ?? 'Nigeria'}</p>
+                {v.rating_avg != null && <div className="mt-3"><RatingStars value={v.rating_avg} count={v.rating_count} /></div>}
               </Link>
             ))}
           </div>

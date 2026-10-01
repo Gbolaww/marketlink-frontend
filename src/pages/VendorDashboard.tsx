@@ -159,9 +159,9 @@ export default function VendorDashboard() {
   const currency = pick<string>(p, 'currency', 'currency_code') ?? 'NGN'
   const orderRows = orders.data ?? []
   const total = (o: Row) => Number(pick(o, 'total_minor', 'total_minor_units', 'total') ?? 0)
-  const revenue = orderRows.filter((o) => !['cancelled', 'pending_payment'].includes(String(o.status))).reduce((s, o) => s + total(o), 0)
-  const fulfilled = orderRows.filter((o) => o.status === 'fulfilled').length
-  const status = String(pick(p, 'status') ?? 'pending')
+  const revenue = orderRows.filter((o) => !['cancelled', 'pending', 'refunded'].includes(String(o.status))).reduce((s, o) => s + total(o), 0)
+  const fulfilled = orderRows.filter((o) => o.status === 'fulfilled' || o.status === 'settled').length
+  const status = String(pick(p, 'kyc_status', 'status') ?? 'pending')
   const rating = Number(pick(p, 'rating_avg') ?? 0)
   const locations = (pick<Row[]>(p, 'locations', 'vendor_locations') ?? []) as Row[]
 
@@ -209,7 +209,7 @@ export default function VendorDashboard() {
                       String(pick(r, 'name') ?? ''),
                       formatPrice(Number(pick(r, 'price_minor_units', 'price_minor') ?? 0), pick<string>(r, 'currency_code', 'currency')),
                       String(pick(r, 'stock_quantity', 'stock') ?? '—'),
-                      String(pick(r, 'status') ?? 'active'),
+                      r.is_active === false ? 'Hidden' : 'Active',
                     ])}
                   />
                 </QueryState>
@@ -227,7 +227,7 @@ export default function VendorDashboard() {
                         formatDate(o.created_at),
                         formatPrice(total(o), pick<string>(o, 'currency', 'currency_code') ?? currency),
                         ORDER_STATUS[st] ?? st,
-                        st === 'paid' || st === 'accepted' ? (
+                        st === 'paid' ? (
                           <Button key="f" size="sm" variant="outline" disabled={fulfil.isPending} onClick={() => fulfil.mutate(String(o.id))}>
                             Mark fulfilled
                           </Button>

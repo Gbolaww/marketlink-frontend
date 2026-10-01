@@ -8,6 +8,7 @@ import type { ProductResult } from '@/components/ProductCard'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { searchApi } from '@/lib/api'
+import { toProduct } from '@/lib/products'
 import { CATEGORIES, DEFAULT_ORIGIN } from '@/lib/categories'
 
 const SORTS = [
@@ -60,9 +61,10 @@ export default function SearchPage() {
         lat: lat ?? DEFAULT_ORIGIN.lat,
         lon: lon ?? DEFAULT_ORIGIN.lon,
         q: q || undefined,
-        radius_km: radius > 0 ? radius : undefined,
+        radius_km: radius > 0 ? radius : 100,
       })
-      return (Array.isArray(data) ? data : (data?.results ?? [])) as ProductResult[]
+      const rows = (Array.isArray(data) ? data : (data?.results ?? [])) as Record<string, unknown>[]
+      return rows.map(toProduct) as ProductResult[]
     },
   })
 

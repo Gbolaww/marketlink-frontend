@@ -39,10 +39,11 @@ export function pick<T = unknown>(row: Record<string, unknown> | null | undefine
 }
 
 export const ORDER_STATUS: Record<string, string> = {
-  pending_payment: 'Awaiting payment',
+  pending: 'Awaiting payment',
   paid: 'Paid',
-  accepted: 'Accepted by vendor',
   fulfilled: 'Fulfilled',
+  settled: 'Settled',
+  disputed: 'Disputed',
   cancelled: 'Cancelled',
   refunded: 'Refunded',
 }

@@ -40,7 +40,7 @@ export default function ProductCard({ item }: { item: ProductResult }) {
         <p className="text-lg font-bold text-primary">{formatPrice(item.price_minor, item.currency)}</p>
         <div className="mt-auto space-y-1 text-xs text-muted-foreground">
           {item.business_name && <p className="truncate font-medium text-foreground">{item.business_name}</p>}
-          <RatingStars value={item.rating_avg} count={item.rating_count} />
+          {item.rating_avg != null && <RatingStars value={item.rating_avg} count={item.rating_count} />}
           <p className="flex items-center gap-1">
             <MapPin size={12} />
             {location || 'Location on request'}

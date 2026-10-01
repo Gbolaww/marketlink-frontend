@@ -39,9 +39,17 @@ export default function AuthPage() {
   const existing = isLoggedIn() ? getUser() : null
   if (existing) return <Navigate to={landingFor(existing)} replace />
 
-  const finish = (data: { access_token: string; refresh_token: string; user: User }) => {
-    setAuth(data.access_token, data.refresh_token, data.user)
-    navigate(landingFor(data.user))
+  // The API returns tokens only, so store the access token first and then load the user.
+  const finish = async (tokens: { access_token: string; refresh_token: string }) => {
+    localStorage.setItem('access_token', tokens.access_token)
+    try {
+      const { data: user } = await authApi.me()
+      setAuth(tokens.access_token, tokens.refresh_token, user as User)
+      navigate(landingFor(user as User))
+    } catch (err) {
+      localStorage.removeItem('access_token')
+      throw err
+    }
   }
 
   const submit = async (e: FormEvent) => {
@@ -52,11 +60,11 @@ export default function AuthPage() {
     try {
       if (mfaToken) {
         const { data } = await authApi.mfaVerify({ mfa_token: mfaToken, code })
-        finish(data)
+        await finish(data)
       } else if (mode === 'signin') {
         const { data } = await authApi.login({ email, password })
         if (data.mfa_token) setMfaToken(data.mfa_token)
-        else finish(data)
+        else await finish(data)
       } else {
         await authApi.register({ email, password, role })
         setNotice('Account created. Sign in to continue.')
@@ -109,7 +117,7 @@ export default function AuthPage() {
             <div className="flex rounded-lg bg-muted p-1">{tab('signin', 'Sign in')}{tab('signup', 'Create account')}</div>
             <div className="mt-5 space-y-4">
               <Field id="email" label="Email" type="email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
-              <Field id="password" label="Password" type="password" autoComplete={mode === 'signin' ? 'current-password' : 'new-password'} value={password} onChange={(e) => setPassword(e.target.value)} required />
+              <Field id="password" label={mode === 'signup' ? 'Password (at least 10 characters)' : 'Password'} type="password" minLength={mode === 'signup' ? 10 : undefined} autoComplete={mode === 'signin' ? 'current-password' : 'new-password'} value={password} onChange={(e) => setPassword(e.target.value)} required />
               {mode === 'signup' && (
                 <div className="space-y-2">
                   <span className="text-sm font-medium leading-none">I want to</span>
