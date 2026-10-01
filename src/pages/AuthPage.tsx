@@ -6,7 +6,7 @@ import AuthIntro from '@/components/AuthIntro'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { authApi } from '@/lib/api'
-import { cn } from '@/lib/utils'
+import { apiError, cn } from '@/lib/utils'
 import { getUser, isLoggedIn, setAuth } from '@/lib/auth'
 import type { User } from '@/lib/auth'
 
@@ -14,11 +14,6 @@ type Mode = 'signin' | 'signup'
 type Role = 'customer' | 'vendor'
 
 const landingFor = (u: User) => (u.role === 'vendor' ? '/vendor-dashboard' : u.role === 'admin' ? '/admin' : '/account')
-
-function errorMessage(err: unknown): string {
-  const detail = (err as { response?: { data?: { detail?: unknown } } })?.response?.data?.detail
-  return typeof detail === 'string' ? detail : 'Something went wrong. Please try again.'
-}
 
 function Field({ id, label, ...rest }: { id: string; label: string } & React.InputHTMLAttributes<HTMLInputElement>) {
   return (
@@ -68,7 +63,7 @@ export default function AuthPage() {
         setMode('signin')
       }
     } catch (err) {
-      setError(errorMessage(err))
+      setError(apiError(err))
     } finally {
       setBusy(false)
     }
