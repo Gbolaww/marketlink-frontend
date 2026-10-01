@@ -66,3 +66,77 @@
   h1, h2, h3, h4 { font-family: var(--font-display); letter-spacing: -0.02em; }
   :focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; }
 }
+
+/* ---- Auth intro: man walks in, drops briefcase, form emerges ---- */
+.intro-scene {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+  z-index: 10;
+}
+.intro-man {
+  position: absolute;
+  left: -40px;
+  top: -100px; /* feet land on the ground line (y = +40px) */
+  width: 80px;
+  height: 140px;
+  animation: intro-walk 5s linear both;
+}
+.intro-man .bob { animation: intro-bob 0.5s ease-in-out infinite; }
+.intro-man .leg-a { transform-origin: 34px 80px; animation: intro-swing 0.5s ease-in-out infinite alternate; }
+.intro-man .leg-b { transform-origin: 46px 80px; animation: intro-swing 0.5s ease-in-out infinite alternate-reverse; }
+.intro-man .arm-back { transform-origin: 30px 36px; animation: intro-swing 0.5s ease-in-out infinite alternate-reverse; }
+.intro-man .hand-case { animation: intro-hide-case 5s step-end both; }
+
+.intro-case {
+  position: absolute;
+  left: -40px;
+  top: -20px; /* sits on the ground line */
+  width: 80px;
+  height: 60px;
+  animation: intro-case-drop 5s linear both;
+}
+.intro-case .lid { transform-origin: 2px 22px; animation: intro-lid 5s ease-out both; }
+
+.intro-form { animation: intro-form-in 5s both; transform-origin: 50% 50%; }
+
+@keyframes intro-walk {
+  0%   { transform: translateX(-100vw); animation-timing-function: linear; }
+  44%  { transform: translateX(0); }
+  52%  { transform: translateX(0); animation-timing-function: linear; }
+  100% { transform: translateX(100vw); }
+}
+@keyframes intro-bob { 50% { transform: translateY(-4px); } }
+@keyframes intro-swing {
+  from { transform: rotate(-22deg); }
+  to   { transform: rotate(22deg); }
+}
+@keyframes intro-hide-case { 0% { opacity: 1; } 44% { opacity: 0; } 100% { opacity: 0; } }
+@keyframes intro-case-drop {
+  0%, 43%   { opacity: 0; transform: translateY(-50px) rotate(-12deg); }
+  44%       { opacity: 1; transform: translateY(-50px) rotate(-12deg); animation-timing-function: ease-in; }
+  48%       { transform: translateY(0) rotate(0); animation-timing-function: ease-out; }
+  50%       { transform: translateY(-10px); animation-timing-function: ease-in; }
+  52%       { transform: translateY(0); }
+  72%       { opacity: 1; transform: translateY(0) scale(1); }
+  82%, 100% { opacity: 0; transform: translateY(0) scale(0.6); }
+}
+@keyframes intro-lid {
+  0%, 54% { transform: rotate(0); }
+  64%, 100% { transform: rotate(-75deg); }
+}
+@keyframes intro-form-in {
+  0%   { opacity: 0; visibility: hidden; transform: scale(0.1); }
+  58%  { opacity: 0; visibility: hidden; transform: scale(0.1); }
+  58.1% { visibility: visible; }
+  75%  { opacity: 1; transform: scale(1.04); animation-timing-function: ease-out; }
+  82%, 100% { opacity: 1; visibility: visible; transform: scale(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .intro-scene { display: none; }
+  .intro-form { animation: none; }
+}

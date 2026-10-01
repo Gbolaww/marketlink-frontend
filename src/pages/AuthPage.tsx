@@ -2,6 +2,7 @@ import { useState } from 'react'
 import type { FormEvent } from 'react'
 import { Navigate, useNavigate } from 'react-router-dom'
 import { Loader2 } from 'lucide-react'
+import AuthIntro from '@/components/AuthIntro'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { authApi } from '@/lib/api'
@@ -87,6 +88,7 @@ export default function AuthPage() {
   )
 
   return (
+    <div className="overflow-x-clip">
     <div className="mx-auto grid max-w-5xl gap-10 px-4 py-16 lg:grid-cols-2">
       <div>
         <h1 className="text-3xl font-extrabold sm:text-4xl">Welcome to MarketLink</h1>
@@ -100,6 +102,7 @@ export default function AuthPage() {
         </ul>
       </div>
 
+      <AuthIntro>
       <form onSubmit={submit} className="rounded-xl border border-border bg-card p-6 shadow-card">
         {mfaToken ? (
           <div className="space-y-4">
@@ -142,6 +145,8 @@ export default function AuthPage() {
           {mfaToken ? 'Verify' : mode === 'signin' ? 'Sign in' : 'Create account'}
         </Button>
       </form>
+      </AuthIntro>
+    </div>
     </div>
   )
 }
