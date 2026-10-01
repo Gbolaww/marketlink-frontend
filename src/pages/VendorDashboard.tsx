@@ -1,7 +1,7 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { FormEvent } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { BarChart3, ImagePlus, Loader2, MapPin, Package, Plus, ShoppingBag, Wallet } from 'lucide-react'
+import { BarChart3, ImagePlus, Loader2, MapPin, Package, Pencil, Plus, ShoppingBag, Wallet } from 'lucide-react'
 import { DataTable, EmptyState, Field, QueryState, StatCard } from '@/components/dashboard'
 import ProductImage from '@/components/ProductImage'
 import { Badge } from '@/components/ui/badge'
@@ -117,6 +117,65 @@ function AddProduct({ onDone, onCancel }: { onDone: () => void; onCancel: () => 
   )
 }
 
+function EditProduct({ product, onDone, onCancel }: { product: Row; onDone: () => void; onCancel: () => void }) {
+  const currency = pick<string>(product, 'currency_code', 'currency') ?? 'NGN'
+  const stockNow = pick<number | null>(product, 'stock_quantity', 'stock')
+  const [name, setName] = useState(String(pick(product, 'name') ?? ''))
+  const [description, setDescription] = useState(String(pick(product, 'description') ?? ''))
+  const [price, setPrice] = useState(String(Number(pick(product, 'price_minor_units', 'price_minor') ?? 0) / 100))
+  const [stock, setStock] = useState(stockNow == null ? '' : String(stockNow))
+  const [visible, setVisible] = useState(product.is_active !== false)
+
+  const formRef = useRef<HTMLFormElement>(null)
+  useEffect(() => {
+    formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+  }, [])
+
+  const save = useMutation({
+    mutationFn: () =>
+      vendorApi.updateProduct(String(product.id), {
+        name: name.trim(),
+        description: description.trim() || null,
+        price_minor_units: Math.round(Number(price) * 100),
+        // Blank means "don't track stock" (always available).
+        stock_quantity: stock.trim() === '' ? null : Math.floor(Number(stock)),
+        is_active: visible,
+      }),
+    onSuccess: onDone,
+  })
+
+  return (
+    <form
+      ref={formRef}
+      onSubmit={(e) => { e.preventDefault(); save.mutate() }}
+      className="mb-6 grid gap-4 rounded-xl border border-primary/30 bg-card p-6 shadow-card sm:grid-cols-2"
+    >
+      <h3 className="font-semibold sm:col-span-2">Edit product</h3>
+      <Field label="Product name"><Input value={name} onChange={(e) => setName(e.target.value)} required maxLength={200} /></Field>
+      <Field label={'Price (' + (currency === 'NGN' ? '₦' : currency) + ')'}>
+        <Input type="number" min="0.01" step="0.01" value={price} onChange={(e) => setPrice(e.target.value)} required />
+      </Field>
+      <Field label="Number available">
+        <Input type="number" min="0" step="1" value={stock} onChange={(e) => setStock(e.target.value)} placeholder="Leave blank if you don't track stock" />
+      </Field>
+      <Field label="Description"><Input value={description} onChange={(e) => setDescription(e.target.value)} /></Field>
+      <label className="flex cursor-pointer items-center gap-3 text-sm font-medium sm:col-span-2">
+        <input type="checkbox" className="size-4 accent-[var(--primary)]" checked={visible} onChange={(e) => setVisible(e.target.checked)} />
+        Show in the marketplace
+        <span className="font-normal text-muted-foreground">(untick to hide it without deleting)</span>
+      </label>
+      {Number(stock) === 0 && stock !== '' && (
+        <p className="text-sm text-muted-foreground sm:col-span-2">With 0 available, customers can see this product but can't order it.</p>
+      )}
+      {save.isError && <p role="alert" className="text-sm text-destructive sm:col-span-2">{apiError(save.error)}</p>}
+      <div className="flex gap-2 sm:col-span-2">
+        <Button type="submit" disabled={save.isPending}>{save.isPending && <Loader2 className="animate-spin" />} Save changes</Button>
+        <Button variant="ghost" onClick={onCancel}>Cancel</Button>
+      </div>
+    </form>
+  )
+}
+
 function PhotoButton({ productId, hasPhoto, onDone }: { productId: string; hasPhoto: boolean; onDone: () => void }) {
   const input = useRef<HTMLInputElement>(null)
   const upload = useMutation({ mutationFn: (file: File) => vendorApi.uploadProductImage(productId, file), onSuccess: onDone })
@@ -162,6 +221,8 @@ function BankDetails() {
 export default function VendorDashboard() {
   const qc = useQueryClient()
   const [adding, setAdding] = useState(false)
+  const [editing, setEditing] = useState<Row | null>(null)
+  const [savedName, setSavedName] = useState<string | null>(null)
 
   const profile = useQuery({
     queryKey: ['vendor-profile'],
@@ -245,21 +306,40 @@ export default function VendorDashboard() {
             if (tab === 'catalogue')
               return (
                 <QueryState loading={products.isLoading} error={products.isError}>
+                  {savedName && <p role="status" className="mb-4 rounded-lg bg-accent/10 px-4 py-2 text-sm font-medium text-accent">Saved changes to {savedName}.</p>}
+                  {editing && (
+                    <EditProduct
+                      key={String(editing.id)}
+                      product={editing}
+                      onCancel={() => setEditing(null)}
+                      onDone={() => {
+                        setSavedName(String(pick(editing, 'name') ?? 'product'))
+                        setEditing(null)
+                        qc.invalidateQueries({ queryKey: ['vendor-products'] })
+                      }}
+                    />
+                  )}
                   <DataTable
-                    head={['Product', 'Price', 'Stock', 'Status', '']}
+                    head={['Product', 'Price', 'Available', 'Status', '']}
                     empty="No products listed yet."
-                    rows={(products.data ?? []).map((r) => [
-                      <div key="n" className="flex items-center gap-3">
-                        <div className="size-10 shrink-0 overflow-hidden rounded-md bg-muted">
-                          <ProductImage src={assetUrl(pick<string>(r, 'image_url'))} name={String(pick(r, 'name') ?? '')} className="text-base" />
-                        </div>
-                        <span className="font-medium text-foreground">{String(pick(r, 'name') ?? '')}</span>
-                      </div>,
-                      formatPrice(Number(pick(r, 'price_minor_units', 'price_minor') ?? 0), pick<string>(r, 'currency_code', 'currency')),
-                      String(pick(r, 'stock_quantity', 'stock') ?? '—'),
-                      r.is_active === false ? 'Hidden' : 'Active',
-                      <PhotoButton key="p" productId={String(r.id)} hasPhoto={!!pick(r, 'image_url')} onDone={() => qc.invalidateQueries({ queryKey: ['vendor-products'] })} />,
-                    ])}
+                    rows={(products.data ?? []).map((r) => {
+                      const stockQty = pick<number | null>(r, 'stock_quantity', 'stock')
+                      return [
+                        <div key="n" className="flex items-center gap-3">
+                          <div className="size-10 shrink-0 overflow-hidden rounded-md bg-muted">
+                            <ProductImage src={assetUrl(pick<string>(r, 'image_url'))} name={String(pick(r, 'name') ?? '')} className="text-base" />
+                          </div>
+                          <span className="font-medium text-foreground">{String(pick(r, 'name') ?? '')}</span>
+                        </div>,
+                        formatPrice(Number(pick(r, 'price_minor_units', 'price_minor') ?? 0), pick<string>(r, 'currency_code', 'currency')),
+                        stockQty == null ? 'Not tracked' : stockQty === 0 ? <span key="s" className="font-medium text-destructive">Out of stock</span> : stockQty <= 5 ? <span key="s" className="font-medium text-primary">{stockQty} left</span> : String(stockQty),
+                        r.is_active === false ? 'Hidden' : 'Active',
+                        <div key="a" className="flex flex-wrap items-center justify-end gap-2">
+                          <Button size="sm" variant="outline" onClick={() => { setSavedName(null); setEditing(r); }}><Pencil /> Edit</Button>
+                          <PhotoButton productId={String(r.id)} hasPhoto={!!pick(r, 'image_url')} onDone={() => qc.invalidateQueries({ queryKey: ['vendor-products'] })} />
+                        </div>,
+                      ]
+                    })}
                   />
                 </QueryState>
               )

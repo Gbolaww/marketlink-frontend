@@ -63,6 +63,10 @@ export const vendorApi = {
     longitude: number
   }) => api.post('/vendors/me', data),
   getMyProducts: () => api.get('/vendors/me/products'),
+  updateProduct: (
+    productId: string,
+    data: { name?: string; description?: string | null; price_minor_units?: number; stock_quantity?: number | null; is_active?: boolean },
+  ) => api.patch('/vendors/me/products/' + productId, data),
   uploadProductImage: (productId: string, file: File) => {
     const form = new FormData()
     form.append('file', file)
