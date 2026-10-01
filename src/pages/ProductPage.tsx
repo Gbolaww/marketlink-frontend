@@ -1,21 +1,50 @@
 import { useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import { useMutation } from '@tanstack/react-query'
-import { ArrowLeft, BadgeCheck, Loader2, MapPin, Minus, Plus, ShieldCheck } from 'lucide-react'
+import { useMutation, useQuery } from '@tanstack/react-query'
+import { ArrowLeft, BadgeCheck, Check, Loader2, MapPin, Minus, Plus, ShieldCheck } from 'lucide-react'
+import ProductImage from '@/components/ProductImage'
+import type { ProductResult } from '@/components/ProductCard'
 import RatingStars from '@/components/RatingStars'
 import { Button } from '@/components/ui/button'
 import { buttonClass } from '@/components/ui/button-styles'
-import { orderApi } from '@/lib/api'
+import { assetUrl, orderApi, productApi } from '@/lib/api'
 import { getUser, isLoggedIn } from '@/lib/auth'
+import { addToCart, wouldMixVendors } from '@/lib/cart'
 import { getRememberedProduct } from '@/lib/products'
 import { apiError, formatDistance, formatPrice } from '@/lib/utils'
+
+type Row = Record<string, unknown>
 
 export default function ProductPage() {
   const { id = '' } = useParams()
   const navigate = useNavigate()
-  const product = getRememberedProduct(id)
   const [quantity, setQuantity] = useState(1)
+  const [added, setAdded] = useState(false)
   const user = isLoggedIn() ? getUser() : null
+
+  // Distance only exists on search results, so keep what the user already saw and layer the fresh details on top.
+  const seen = getRememberedProduct(id)
+  const fresh = useQuery({
+    queryKey: ['product', id],
+    retry: false,
+    queryFn: async () => (await productApi.get(id)).data as Row,
+  })
+
+  const product: ProductResult | undefined = fresh.data
+    ? {
+        product_id: String(fresh.data.id),
+        name: String(fresh.data.name),
+        description: (fresh.data.description ?? null) as string | null,
+        price_minor: Number(fresh.data.price_minor_units),
+        currency: String(fresh.data.currency_code),
+        vendor_id: String(fresh.data.vendor_id),
+        business_name: String(fresh.data.vendor_name),
+        image_url: assetUrl(fresh.data.image_url as string | null),
+        rating_avg: Number(fresh.data.vendor_rating_count) > 0 ? Number(fresh.data.vendor_rating_avg) : null,
+        rating_count: Number(fresh.data.vendor_rating_count),
+        distance_km: seen?.distance_km,
+      }
+    : seen
 
   const buy = useMutation({
     mutationFn: async () => (await orderApi.createOrder({ items: [{ product_id: id, quantity }] })).data,
@@ -25,11 +54,15 @@ export default function ProductPage() {
     },
   })
 
+  if (!product && fresh.isLoading) {
+    return <div className="mx-auto max-w-5xl px-4 py-10"><div className="h-96 animate-pulse rounded-xl bg-muted" /></div>
+  }
+
   if (!product) {
     return (
       <div className="mx-auto max-w-xl px-4 py-24 text-center">
-        <h1 className="text-2xl font-bold">We couldn't find that product</h1>
-        <p className="mt-2 text-muted-foreground">Open it from the search results and it will appear here.</p>
+        <h1 className="text-2xl font-bold">This product isn't available</h1>
+        <p className="mt-2 text-muted-foreground">It may have been removed, or the vendor is no longer taking orders.</p>
         <Link to="/search" className={buttonClass('default', 'md', 'mt-6')}>Browse products</Link>
       </div>
     )
@@ -37,6 +70,22 @@ export default function ProductPage() {
 
   const total = product.price_minor * quantity
   const distance = formatDistance(product.distance_km)
+  const stock = fresh.data?.stock_quantity as number | null | undefined
+  const soldOut = stock != null && stock <= 0
+  const maxQty = stock != null ? Math.max(1, Math.min(99, stock)) : 99
+
+  const onAdd = () => {
+    const vendor = { id: product.vendor_id, name: product.business_name }
+    if (wouldMixVendors(product.vendor_id) && !window.confirm('Your cart has items from another vendor. Start a new cart with this item?')) return
+    addToCart(
+      { product_id: product.product_id, name: product.name, price_minor: product.price_minor, currency: product.currency ?? 'NGN', image_url: product.image_url ?? null },
+      vendor,
+      quantity,
+      wouldMixVendors(product.vendor_id),
+    )
+    setAdded(true)
+    window.setTimeout(() => setAdded(false), 2500)
+  }
 
   const onBuy = () => {
     if (!user) return navigate('/auth')
@@ -51,11 +100,7 @@ export default function ProductPage() {
 
       <div className="mt-6 grid gap-10 md:grid-cols-2">
         <div className="aspect-[4/3] overflow-hidden rounded-xl border border-border bg-muted">
-          {product.image_url ? (
-            <img src={product.image_url} alt={product.name} className="h-full w-full object-cover" />
-          ) : (
-            <div className="flex h-full items-center justify-center text-sm text-muted-foreground">No photo</div>
-          )}
+          <ProductImage src={product.image_url} name={product.name} className="text-7xl" />
         </div>
 
         <div>
@@ -74,7 +119,8 @@ export default function ProductPage() {
           {distance && (
             <p className="mt-2 flex items-center gap-1 text-sm text-muted-foreground"><MapPin size={14} /> {distance}</p>
           )}
-          {product.description && <p className="mt-5 text-muted-foreground">{product.description}</p>}
+          {product.description && <p className="mt-5 leading-relaxed text-muted-foreground">{product.description}</p>}
+          {stock != null && !soldOut && stock <= 5 && <p className="mt-3 text-sm font-medium text-primary">Only {stock} left</p>}
 
           <div className="mt-8 rounded-xl border border-border bg-card p-5 shadow-card">
             <div className="flex items-center justify-between">
@@ -82,7 +128,7 @@ export default function ProductPage() {
               <div className="flex items-center gap-3">
                 <Button variant="outline" size="icon" aria-label="Decrease quantity" disabled={quantity <= 1} onClick={() => setQuantity((q) => q - 1)}><Minus /></Button>
                 <span className="w-6 text-center font-semibold">{quantity}</span>
-                <Button variant="outline" size="icon" aria-label="Increase quantity" disabled={quantity >= 99} onClick={() => setQuantity((q) => q + 1)}><Plus /></Button>
+                <Button variant="outline" size="icon" aria-label="Increase quantity" disabled={quantity >= maxQty} onClick={() => setQuantity((q) => q + 1)}><Plus /></Button>
               </div>
             </div>
             <div className="mt-4 flex items-center justify-between border-t border-border pt-4">
@@ -90,18 +136,28 @@ export default function ProductPage() {
               <span className="text-xl font-bold">{formatPrice(total, product.currency)}</span>
             </div>
 
-            {user && user.role !== 'customer' ? (
+            {soldOut ? (
+              <p className="mt-4 text-sm font-medium text-destructive">This item is out of stock.</p>
+            ) : user && user.role !== 'customer' ? (
               <p className="mt-4 text-sm text-muted-foreground">Sign in with a customer account to buy this product.</p>
             ) : (
-              <Button size="lg" className="mt-4 w-full" disabled={buy.isPending} onClick={onBuy}>
-                {buy.isPending && <Loader2 className="animate-spin" />}
-                {user ? 'Buy now' : 'Sign in to buy'}
-              </Button>
+              <div className="mt-4 grid gap-2 sm:grid-cols-2">
+                <Button size="lg" variant="outline" onClick={onAdd}>
+                  {added ? <><Check /> Added</> : 'Add to cart'}
+                </Button>
+                <Button size="lg" disabled={buy.isPending} onClick={onBuy}>
+                  {buy.isPending && <Loader2 className="animate-spin" />}
+                  {user ? 'Buy now' : 'Sign in to buy'}
+                </Button>
+              </div>
+            )}
+            {added && (
+              <Link to="/cart" className="mt-3 block text-center text-sm font-semibold text-primary hover:underline">View cart</Link>
             )}
             {buy.isError && <p role="alert" className="mt-3 text-sm text-destructive">{apiError(buy.error)}</p>}
             <p className="mt-4 flex items-start gap-2 text-xs text-muted-foreground">
               <ShieldCheck size={14} className="mt-0.5 shrink-0" />
-              Pay safely on MarketLink. The vendor is paid only after the order is confirmed.
+              Your payment is held by MarketLink until the vendor marks the order fulfilled.
             </p>
           </div>
         </div>

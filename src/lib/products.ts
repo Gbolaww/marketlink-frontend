@@ -1,4 +1,5 @@
 import type { ProductResult } from '@/components/ProductCard'
+import { assetUrl } from '@/lib/api'
 
 type Row = Record<string, unknown>
 
@@ -13,7 +14,7 @@ export function toProduct(r: Row): ProductResult {
     vendor_id: r.vendor_id as string | undefined,
     business_name: (r.vendor_name ?? r.business_name) as string | undefined,
     distance_km: r.distance_km as number | undefined,
-    image_url: (r.image_url ?? null) as string | null,
+    image_url: assetUrl(r.image_url as string | null),
     rating_avg: (r.rating_avg ?? null) as number | null,
     rating_count: (r.rating_count ?? null) as number | null,
     city: (r.city ?? null) as string | null,

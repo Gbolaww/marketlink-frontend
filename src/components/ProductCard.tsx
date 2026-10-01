@@ -1,5 +1,6 @@
 import { MapPin } from 'lucide-react'
 import { Link } from 'react-router-dom'
+import ProductImage from '@/components/ProductImage'
 import RatingStars from '@/components/RatingStars'
 import { formatDistance, formatPrice } from '@/lib/utils'
 
@@ -26,16 +27,7 @@ export default function ProductCard({ item }: { item: ProductResult }) {
       className="group flex flex-col overflow-hidden rounded-xl border border-border bg-card shadow-card transition-shadow hover:shadow-lift"
     >
       <div className="aspect-[4/3] w-full overflow-hidden bg-muted">
-        {item.image_url ? (
-          <img
-            src={item.image_url}
-            alt={item.name}
-            loading="lazy"
-            className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
-          />
-        ) : (
-          <div className="flex h-full items-center justify-center text-sm text-muted-foreground">No photo</div>
-        )}
+        <ProductImage src={item.image_url} name={item.name} className="transition-transform duration-300 group-hover:scale-[1.03]" />
       </div>
       <div className="flex flex-1 flex-col gap-2 p-4">
         <h3 className="line-clamp-2 text-base font-semibold leading-snug">{item.name}</h3>

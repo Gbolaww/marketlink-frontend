@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { MapPin, Package, Star } from 'lucide-react'
 import { EmptyState, QueryState } from '@/components/dashboard'
@@ -51,7 +52,9 @@ export default function AccountPage() {
                         <div key={String(o.id)} className="rounded-xl border border-border bg-card p-5">
                           <div className="flex flex-wrap items-center justify-between gap-3">
                             <div>
-                              <p className="font-semibold">Order {String(pick(o, 'order_number') ?? String(o.id).slice(0, 8))}</p>
+                              <Link to={'/orders/' + String(o.id)} className="font-semibold hover:underline">
+                                Order {String(pick(o, 'order_number') ?? String(o.id).slice(0, 8).toUpperCase())}
+                              </Link>
                               <p className="text-sm text-muted-foreground">{formatDate(o.created_at)}</p>
                             </div>
                             <div className="flex items-center gap-3">

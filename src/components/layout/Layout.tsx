@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react'
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom'
-import { LogOut, Menu, Search, X } from 'lucide-react'
+import { LogOut, Menu, Search, ShoppingBag, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { buttonClass } from '@/components/ui/button-styles'
 import { clearAuth, getUser, isLoggedIn } from '@/lib/auth'
+import { cartCount, useCart } from '@/lib/cart'
 
 const NAV = [
   { to: '/search', label: 'Browse' },
@@ -23,6 +24,7 @@ function Header() {
   const navigate = useNavigate()
   const [open, setOpen] = useState(false)
   const user = isLoggedIn() ? getUser() : null
+  const count = cartCount(useCart())
   const home = user?.role === 'vendor' ? '/vendor-dashboard' : user?.role === 'admin' ? '/admin' : '/account'
 
   const signOut = () => {
@@ -32,7 +34,7 @@ function Header() {
   }
 
   return (
-    <header className="sticky top-0 z-40 border-b border-border bg-background/85 backdrop-blur-md">
+    <header className="sticky top-0 z-40 border-b border-border bg-background/85 backdrop-blur-md print:hidden">
       <div className="mx-auto flex h-16 max-w-6xl items-center gap-4 px-4">
         <Link to="/"><Logo /></Link>
         <nav className="ml-4 hidden items-center gap-1 md:flex">
@@ -44,6 +46,12 @@ function Header() {
         </nav>
         <div className="ml-auto flex items-center gap-2">
           <Link to="/search" aria-label="Search" className={buttonClass('ghost', 'icon')}><Search /></Link>
+          <Link to="/cart" aria-label={'Cart, ' + count + ' items'} className={buttonClass('ghost', 'icon', 'relative')}>
+            <ShoppingBag />
+            {count > 0 && (
+              <span className="absolute -right-0.5 -top-0.5 grid min-w-4 place-items-center rounded-full bg-primary px-1 text-[10px] font-bold leading-4 text-primary-foreground">{count}</span>
+            )}
+          </Link>
           {user && <Link to="/security" className={buttonClass('ghost', 'sm', 'hidden sm:inline-flex')}>Security</Link>}
           {user ? (
             <>
@@ -81,7 +89,7 @@ function Header() {
 function Footer() {
   const link = 'hover:text-foreground'
   return (
-    <footer className="mt-20 border-t border-border bg-secondary/40">
+    <footer className="mt-20 border-t border-border bg-secondary/40 print:hidden">
       <div className="mx-auto grid max-w-6xl gap-8 px-4 py-12 sm:grid-cols-2 lg:grid-cols-4">
         <div>
           <Logo small />

@@ -15,6 +15,7 @@ export default function OrderCallbackPage() {
   const reference = params.get('reference') ?? params.get('trxref')
   const [phase, setPhase] = useState<Phase>('checking')
   const tries = useRef(0)
+  const [orderId, setOrderId] = useState<string | null>(null)
 
   useEffect(() => {
     if (!reference) return
@@ -26,6 +27,7 @@ export default function OrderCallbackPage() {
         const { data } = await orderApi.getMyOrders()
         const order = (Array.isArray(data) ? data : []).find((o: Record<string, unknown>) => o.processor_reference === reference)
         const status = String(order?.status ?? '')
+        if (order && !cancelled) setOrderId(String(order.id))
         if (status && status !== 'pending') {
           if (!cancelled) setPhase(status === 'cancelled' ? 'failed' : 'paid')
           return
@@ -65,7 +67,7 @@ export default function OrderCallbackPage() {
           <CheckCircle2 className="mx-auto size-12 text-accent" />
           <h1 className="mt-6 text-2xl font-bold">Payment received</h1>
           <p className="mt-2 text-muted-foreground">Your order is with the vendor. You can follow its status in your account.</p>
-          <Link to="/account" className={buttonClass('default', 'lg', 'mt-6')}>View my orders</Link>
+          <Link to={orderId ? '/orders/' + orderId : '/account'} className={buttonClass('default', 'lg', 'mt-6')}>View my order</Link>
         </>
       )}
       {view === 'pending' && (

@@ -1,6 +1,10 @@
 import axios from 'axios'
 
-const BASE_URL = import.meta.env.VITE_API_URL ?? 'http://127.0.0.1:8000'
+const BASE_URL: string = import.meta.env.VITE_API_URL ?? 'http://127.0.0.1:8000'
+
+/** Turn an API-relative path such as /uploads/x.jpg into a full URL the browser can load. */
+export const assetUrl = (path?: string | null): string | null =>
+  path ? (/^https?:\/\//.test(path) ? path : BASE_URL.replace(/\/$/, '') + path) : null
 
 export const api = axios.create({
   baseURL: BASE_URL,
@@ -59,6 +63,11 @@ export const vendorApi = {
     longitude: number
   }) => api.post('/vendors/me', data),
   getMyProducts: () => api.get('/vendors/me/products'),
+  uploadProductImage: (productId: string, file: File) => {
+    const form = new FormData()
+    form.append('file', file)
+    return api.post('/vendors/me/products/' + productId + '/image', form)
+  },
   createProduct: (data: {
     name: string
     description?: string
@@ -72,6 +81,10 @@ export const vendorApi = {
   submitBankDetails: (data: { account_number: string; bank_code: string }) =>
     api.post('/vendors/me/bank-details', data),
   getBanks: () => api.get('/vendors/banks'),
+}
+
+export const productApi = {
+  get: (id: string) => api.get('/products/' + id),
 }
 
 export const orderApi = {

@@ -1,13 +1,14 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import type { FormEvent } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { BarChart3, Loader2, MapPin, Package, Plus, ShoppingBag, Wallet } from 'lucide-react'
+import { BarChart3, ImagePlus, Loader2, MapPin, Package, Plus, ShoppingBag, Wallet } from 'lucide-react'
 import { DataTable, EmptyState, Field, QueryState, StatCard } from '@/components/dashboard'
+import ProductImage from '@/components/ProductImage'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Tabs } from '@/components/ui/tabs'
-import { vendorApi } from '@/lib/api'
+import { assetUrl, vendorApi } from '@/lib/api'
 import { ORDER_STATUS, VENDOR_STATUS, apiError, formatDate, formatPrice, pick } from '@/lib/utils'
 
 type Row = Record<string, unknown>
@@ -70,15 +71,19 @@ function AddProduct({ onDone, onCancel }: { onDone: () => void; onCancel: () => 
   const [description, setDescription] = useState('')
   const [price, setPrice] = useState('')
   const [stock, setStock] = useState('1')
+  const [photo, setPhoto] = useState<File | null>(null)
+  const preview = photo ? URL.createObjectURL(photo) : null
   const create = useMutation({
-    mutationFn: () =>
-      vendorApi.createProduct({
+    mutationFn: async () => {
+      const { data } = await vendorApi.createProduct({
         name,
         description: description || undefined,
         price_minor_units: Math.round(Number(price) * 100),
         currency_code: 'NGN',
         stock_quantity: Number(stock),
-      }),
+      })
+      if (photo) await vendorApi.uploadProductImage(String(data.id), photo)
+    },
     onSuccess: onDone,
   })
   return (
@@ -90,12 +95,39 @@ function AddProduct({ onDone, onCancel }: { onDone: () => void; onCancel: () => 
       <Field label="Price (₦)"><Input type="number" min="0" step="0.01" value={price} onChange={(e) => setPrice(e.target.value)} required /></Field>
       <Field label="Stock"><Input type="number" min="0" value={stock} onChange={(e) => setStock(e.target.value)} /></Field>
       <Field label="Description"><Input value={description} onChange={(e) => setDescription(e.target.value)} /></Field>
+      <div className="sm:col-span-2">
+        <label className="block text-sm font-medium">Photo</label>
+        <div className="mt-2 flex items-center gap-4">
+          <div className="size-20 overflow-hidden rounded-lg border border-border bg-muted">
+            {preview ? <img src={preview} alt="Preview" className="h-full w-full object-cover" /> : <ProductImage name={name || 'P'} className="text-2xl" />}
+          </div>
+          <label className="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-input px-3 py-2 text-sm font-semibold hover:bg-secondary">
+            <ImagePlus className="size-4" /> {photo ? 'Change photo' : 'Add a photo'}
+            <input type="file" accept="image/jpeg,image/png,image/webp" className="sr-only" onChange={(e) => setPhoto(e.target.files?.[0] ?? null)} />
+          </label>
+          <span className="text-xs text-muted-foreground">JPEG, PNG or WebP, up to 5 MB</span>
+        </div>
+      </div>
       {create.isError && <p role="alert" className="text-sm text-destructive sm:col-span-2">{apiError(create.error)}</p>}
       <div className="flex gap-2 sm:col-span-2">
         <Button type="submit" disabled={create.isPending}>{create.isPending && <Loader2 className="animate-spin" />} Save product</Button>
         <Button variant="ghost" onClick={onCancel}>Cancel</Button>
       </div>
     </form>
+  )
+}
+
+function PhotoButton({ productId, hasPhoto, onDone }: { productId: string; hasPhoto: boolean; onDone: () => void }) {
+  const input = useRef<HTMLInputElement>(null)
+  const upload = useMutation({ mutationFn: (file: File) => vendorApi.uploadProductImage(productId, file), onSuccess: onDone })
+  return (
+    <div className="text-right">
+      <Button size="sm" variant="outline" disabled={upload.isPending} onClick={() => input.current?.click()}>
+        {upload.isPending ? <Loader2 className="animate-spin" /> : <ImagePlus />} {hasPhoto ? 'Change photo' : 'Add photo'}
+      </Button>
+      <input ref={input} type="file" accept="image/jpeg,image/png,image/webp" className="sr-only" onChange={(e) => { const f = e.target.files?.[0]; if (f) upload.mutate(f); e.target.value = '' }} />
+      {upload.isError && <p role="alert" className="mt-1 text-xs text-destructive">{apiError(upload.error)}</p>}
+    </div>
   )
 }
 
@@ -214,13 +246,19 @@ export default function VendorDashboard() {
               return (
                 <QueryState loading={products.isLoading} error={products.isError}>
                   <DataTable
-                    head={['Product', 'Price', 'Stock', 'Status']}
+                    head={['Product', 'Price', 'Stock', 'Status', '']}
                     empty="No products listed yet."
                     rows={(products.data ?? []).map((r) => [
-                      String(pick(r, 'name') ?? ''),
+                      <div key="n" className="flex items-center gap-3">
+                        <div className="size-10 shrink-0 overflow-hidden rounded-md bg-muted">
+                          <ProductImage src={assetUrl(pick<string>(r, 'image_url'))} name={String(pick(r, 'name') ?? '')} className="text-base" />
+                        </div>
+                        <span className="font-medium text-foreground">{String(pick(r, 'name') ?? '')}</span>
+                      </div>,
                       formatPrice(Number(pick(r, 'price_minor_units', 'price_minor') ?? 0), pick<string>(r, 'currency_code', 'currency')),
                       String(pick(r, 'stock_quantity', 'stock') ?? '—'),
                       r.is_active === false ? 'Hidden' : 'Active',
+                      <PhotoButton key="p" productId={String(r.id)} hasPhoto={!!pick(r, 'image_url')} onDone={() => qc.invalidateQueries({ queryKey: ['vendor-products'] })} />,
                     ])}
                   />
                 </QueryState>
