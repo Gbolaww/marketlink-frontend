@@ -16,10 +16,19 @@ export function formatDistance(km: number | null | undefined): string | null {
 }
 
 export function apiError(err: unknown): string {
-  const detail = (err as { response?: { data?: { detail?: unknown } } })?.response?.data?.detail
+  const e = err as { response?: { status?: number; data?: { detail?: unknown; message?: unknown } }; message?: string }
+  if (!e?.response) {
+    return "Can't reach the server. Make sure the backend is running and allows requests from this site (CORS)."
+  }
+  const { status, data } = e.response
+  const detail = data?.detail ?? data?.message
   if (typeof detail === 'string') return detail
-  if (Array.isArray(detail) && detail[0]?.msg) return String(detail[0].msg)
-  return 'Something went wrong. Please try again.'
+  if (Array.isArray(detail) && detail.length > 0) {
+    return detail
+      .map((d: { loc?: unknown[]; msg?: string }) => [d.loc?.slice(1).join('.'), d.msg].filter(Boolean).join(': '))
+      .join('; ')
+  }
+  return 'Request failed (HTTP ' + status + '). Check the backend logs.'
 }
 
 /** Read the first present key from an API row (the backend field names vary between endpoints). */
