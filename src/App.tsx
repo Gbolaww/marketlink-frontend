@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { getUser, isLoggedIn } from '@/lib/auth'
+import Layout from '@/components/layout/Layout'
 import LandingPage from '@/pages/LandingPage'
 import AuthPage from '@/pages/AuthPage'
 import SearchPage from '@/pages/SearchPage'
@@ -19,6 +20,7 @@ export default function App() {
   return (
     <BrowserRouter>
       <Routes>
+        <Route element={<Layout />}>
         <Route path="/" element={<LandingPage />} />
         <Route path="/auth" element={<AuthPage />} />
         <Route path="/search" element={<SearchPage />} />
@@ -31,6 +33,7 @@ export default function App() {
         <Route path="/admin" element={
           <ProtectedRoute role="admin"><AdminPage /></ProtectedRoute>
         } />
+        </Route>
       </Routes>
     </BrowserRouter>
   )
