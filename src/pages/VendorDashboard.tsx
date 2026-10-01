@@ -18,7 +18,7 @@ const list = (data: unknown, ...keys: string[]): Row[] => {
 }
 
 function RegisterVendor({ onDone }: { onDone: () => void }) {
-  const [form, setForm] = useState({ business_name: '', description: '', region_id: '', address: '', latitude: '', longitude: '' })
+  const [form, setForm] = useState({ business_name: '', description: '', region_id: '00000000-0000-4000-8000-000000000001', address: '', latitude: '', longitude: '' })
   const set = (k: keyof typeof form) => (e: { target: { value: string } }) => setForm((f) => ({ ...f, [k]: e.target.value }))
   const create = useMutation({
     mutationFn: () =>
