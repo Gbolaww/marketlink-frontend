@@ -42,9 +42,10 @@ interface Pose {
 }
 
 const STAND: Pose = { lean: 0, head: 0, thighA: 0, shinA: 4, thighB: 0, shinB: 4, armF: 2, foreF: -4, armB: -2, foreB: -6 }
-// Relaxed lean toward the form: weight forward, ankles crossed, elbow bent with the hand at his chin.
-const LEAN: Pose = { lean: 13, head: -3, thighA: 16, shinA: 8, thighB: -7, shinB: 3, armF: -34, foreF: -112, armB: 8, foreB: -14 }
-const LEAN_STEP = 34 // px he shuffles in towards the form
+// Back against the form: he turns around (faces away from it), shoulders and back resting on its edge,
+// feet a little out in front, arms folded.
+const LEAN: Pose = { lean: -8, head: 3, thighA: -13, shinA: 9, thighB: -7, shinB: 6, armF: -26, foreF: -104, armB: 10, foreB: -76 }
+const BACK_TO_FORM = 25 // px from the middle of his body to the form's left edge when leaning
 const CROUCH: Pose = { lean: 24, head: 14, thighA: -64, shinA: 114, thighB: -56, shinB: 104, armF: -46, foreF: -12, armB: -20, foreB: -30 }
 
 const rad = (d: number) => (d * Math.PI) / 180
@@ -269,6 +270,8 @@ function useReducedMotion() {
 export default function AuthIntro({ children }: { children: ReactNode }) {
   const reduced = useReducedMotion()
   const [manVisible, setManVisible] = useState(!reduced)
+  const [skippable, setSkippable] = useState(!reduced)
+  const skipRef = useRef<(() => void) | null>(null)
 
   const wrapRef = useRef<HTMLDivElement>(null)
   const sceneRef = useRef<HTMLDivElement>(null)
@@ -302,6 +305,7 @@ export default function AuthIntro({ children }: { children: ReactNode }) {
     const staysBeside = box.left - 2 * manHalf - 16 >= 0
     const stopX = staysBeside ? -(halfForm + manHalf + 10) : -48
     const endX = window.innerWidth - centerX + manHalf + 20
+    const leanX = -(halfForm + BACK_TO_FORM)
 
     // ---- Timeline (seconds) ----
     const walkIn = Math.min(4.4, Math.max(3, (stopX - startX) / WALK_SPEED))
@@ -315,9 +319,12 @@ export default function AuthIntro({ children }: { children: ReactNode }) {
       formStart: walkIn + 1.75,
       formEnd: walkIn + 3.05,
       leave: staysBeside ? Infinity : walkIn + 2.55,
+      turn: walkIn + 2.35 + 1.3, // after standing up and shuffling in
     }
     const leaveDur = Math.max(1.4, (endX - stopX) / (WALK_SPEED * 0.8))
-    const done = staysBeside ? T.up : T.leave + leaveDur
+    const done = staysBeside ? T.turn + 2 : T.leave + leaveDur
+    let skipped = false
+    skipRef.current = () => { skipped = true }
 
     form.style.visibility = 'hidden'
     form.style.pointerEvents = 'none'
@@ -335,7 +342,7 @@ export default function AuthIntro({ children }: { children: ReactNode }) {
 
     const frame = (now: number) => {
       if (!t0) t0 = now
-      const t = (now - t0) / 1000
+      const t = skipped ? done + 1 : (now - t0) / 1000
 
       // Horizontal position and walking amplitude.
       let x: number
@@ -347,7 +354,7 @@ export default function AuthIntro({ children }: { children: ReactNode }) {
       } else if (t < T.leave) {
         // After standing he shuffles up to the form (only when he stays beside it).
         const k = staysBeside ? easeInOut((t - T.up) / 1.2) : 0
-        x = stopX + LEAN_STEP * k
+        x = lerp(stopX, leanX, k)
         m = 0.3 * Math.sin(Math.PI * k)
       } else {
         const [k, v] = startAndStop((t - T.leave) / leaveDur)
@@ -362,18 +369,20 @@ export default function AuthIntro({ children }: { children: ReactNode }) {
       const crouchAmt = t < T.rise ? down : 1 - up
       if (crouchAmt > 0) pose = mix(pose, CROUCH, crouchAmt)
 
-      // Settle into the lean, then breathe gently.
-      if (staysBeside && t > T.up) {
-        const lean = easeInOut((t - T.up - 0.35) / 1.1)
+      // Turn around, settle back against the form, then breathe gently.
+      let facing = 1
+      if (staysBeside && t > T.turn) {
+        facing = Math.cos(Math.PI * easeInOut((t - T.turn) / 0.5))
+        const lean = easeInOut((t - T.turn - 0.3) / 1.2)
         pose = mix(pose, LEAN, lean)
-        const s = Math.sin((t - T.up) * 1.6) * lean
+        const s = Math.sin((t - T.turn) * 1.6) * lean
         pose = { ...pose, lean: pose.lean + 0.7 * s, head: pose.head - 1.5 * s }
       }
 
       const man = r.man as SVGSVGElement | null
       if (man) {
         const drop = bodyDrop(pose)
-        man.style.transform = `translate(${(x - manHalf).toFixed(1)}px, ${(groundY - H * SCALE).toFixed(1)}px)`
+        man.style.transform = `translate(${(x - manHalf).toFixed(1)}px, ${(groundY - H * SCALE).toFixed(1)}px) scaleX(${facing.toFixed(3)})`
         r.body?.setAttribute('transform', `translate(0 ${drop.toFixed(2)})`)
         setRot(r.upperB, pose.lean, HIP.x, HIP.y)
         setRot(r.upperF, pose.lean, HIP.x, HIP.y)
@@ -432,13 +441,20 @@ export default function AuthIntro({ children }: { children: ReactNode }) {
 
       if (!staysBeside && t > done + 0.1) {
         setManVisible(false)
+        setSkippable(false)
         return
+      }
+      if (skipped || (staysBeside && t > done)) {
+        if (caseEl) caseEl.style.opacity = '0'
+        setSkippable(false)
+        if (skipped) return
       }
       raf = requestAnimationFrame(frame)
     }
 
     raf = requestAnimationFrame(frame)
     return () => {
+      skipRef.current = null
       cancelAnimationFrame(raf)
       form.style.visibility = ''
       form.style.opacity = ''
@@ -449,6 +465,15 @@ export default function AuthIntro({ children }: { children: ReactNode }) {
 
   return (
     <div className="lg:pl-36">
+      {skippable && (
+        <button
+          type="button"
+          onClick={() => skipRef.current?.()}
+          className="fixed bottom-6 left-1/2 z-50 -translate-x-1/2 cursor-pointer rounded-full border border-border bg-card/90 px-4 py-2 text-sm font-semibold text-muted-foreground shadow-card backdrop-blur transition-colors hover:text-foreground"
+        >
+          Skip intro
+        </button>
+      )}
       <div ref={wrapRef} className="relative">
         {manVisible && (
           <div ref={sceneRef} className="intro-scene" aria-hidden>
