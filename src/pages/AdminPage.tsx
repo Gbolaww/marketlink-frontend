@@ -1,9 +1,11 @@
 import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { Link } from 'react-router-dom'
 import { Globe, ShieldCheck } from 'lucide-react'
 import { EmptyState, QueryState } from '@/components/dashboard'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { buttonClass } from '@/components/ui/button-styles'
 import { Input } from '@/components/ui/input'
 import { Tabs } from '@/components/ui/tabs'
 import { adminApi } from '@/lib/api'
@@ -16,6 +18,10 @@ const REGIONS = [
   { region: 'Ghana', currency: 'GHS', state: 'Phase 2' },
   { region: 'Kenya', currency: 'KES', state: 'Phase 2' },
 ]
+
+const needsMfa = (err: unknown) =>
+  (err as { response?: { status?: number; data?: { detail?: unknown } } })?.response?.status === 403 &&
+  String((err as { response?: { data?: { detail?: unknown } } })?.response?.data?.detail ?? '').includes('MFA')
 
 function VendorRow({ vendor }: { vendor: Row }) {
   const qc = useQueryClient()
@@ -87,13 +93,23 @@ export default function AdminPage() {
                 ))}
               </div>
             ) : (
-              <QueryState loading={pending.isLoading} error={pending.isError}>
+              pending.isError && needsMfa(pending.error) ? (
+                <div className="rounded-xl border border-warning/40 bg-warning/10 p-6">
+                  <h2 className="text-lg font-semibold">Turn on two-factor authentication first</h2>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    Admin accounts must use two-factor authentication before they can approve vendors or take other admin actions.
+                  </p>
+                  <Link to="/security" className={buttonClass('default', 'md', 'mt-4')}>Set up two-factor authentication</Link>
+                </div>
+              ) : (
+              <QueryState loading={pending.isLoading} error={pending.isError} message={pending.isError ? apiError(pending.error) : undefined}>
                 {(pending.data ?? []).length === 0 ? (
                   <EmptyState title="No vendors waiting" body="New vendor applications will appear here for approval." />
                 ) : (
                   <div className="space-y-4">{(pending.data ?? []).map((v) => <VendorRow key={String(v.id)} vendor={v} />)}</div>
                 )}
               </QueryState>
+              )
             )
           }
         />

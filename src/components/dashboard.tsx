@@ -48,8 +48,8 @@ export function Field({ label, children }: { label: string; children: ReactNode 
   )
 }
 
-export function QueryState({ loading, error, children }: { loading: boolean; error: boolean; children: ReactNode }) {
+export function QueryState({ loading, error, message, children }: { loading: boolean; error: boolean; message?: string; children: ReactNode }) {
   if (loading) return <div className="h-40 animate-pulse rounded-xl bg-muted" />
-  if (error) return <p className="rounded-xl border border-dashed border-border py-14 text-center text-destructive">We couldn't load this. Please try again.</p>
+  if (error) return <p className="rounded-xl border border-dashed border-border px-4 py-14 text-center text-destructive">{message ?? "We couldn't load this. Please try again."}</p>
   return <>{children}</>
 }

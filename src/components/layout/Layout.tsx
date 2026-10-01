@@ -44,6 +44,7 @@ function Header() {
         </nav>
         <div className="ml-auto flex items-center gap-2">
           <Link to="/search" aria-label="Search" className={buttonClass('ghost', 'icon')}><Search /></Link>
+          {user && <Link to="/security" className={buttonClass('ghost', 'sm', 'hidden sm:inline-flex')}>Security</Link>}
           {user ? (
             <>
               <Link to={home} className={buttonClass('secondary', 'sm', 'max-w-40')}>

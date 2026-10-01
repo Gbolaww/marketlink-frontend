@@ -6,6 +6,7 @@ import AuthPage from '@/pages/AuthPage'
 import SearchPage from '@/pages/SearchPage'
 import ProductPage from '@/pages/ProductPage'
 import OrderCallbackPage from '@/pages/OrderCallbackPage'
+import SecurityPage from '@/pages/SecurityPage'
 import AccountPage from '@/pages/AccountPage'
 import VendorDashboard from '@/pages/VendorDashboard'
 import AdminPage from '@/pages/AdminPage'
@@ -27,6 +28,7 @@ export default function App() {
         <Route path="/auth" element={<AuthPage />} />
         <Route path="/search" element={<SearchPage />} />
         <Route path="/product/:id" element={<ProductPage />} />
+        <Route path="/security" element={<ProtectedRoute><SecurityPage /></ProtectedRoute>} />
         <Route path="/orders/callback" element={
           <ProtectedRoute role="customer"><OrderCallbackPage /></ProtectedRoute>
         } />

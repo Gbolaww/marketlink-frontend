@@ -17,7 +17,9 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401 && localStorage.getItem('access_token')) {
+    // A 401 from an /auth/* call (wrong code, wrong password) is a form error, not an expired session.
+    const isAuthCall = String(error.config?.url ?? '').startsWith('/auth/') && error.config?.url !== '/auth/me'
+    if (error.response?.status === 401 && localStorage.getItem('access_token') && !isAuthCall) {
       localStorage.removeItem('access_token')
       localStorage.removeItem('refresh_token')
       localStorage.removeItem('user')
@@ -35,6 +37,8 @@ export const authApi = {
   mfaVerify: (data: { mfa_token: string; code: string }) =>
     api.post('/auth/mfa/login-verify', data),
   me: () => api.get('/auth/me'),
+  mfaSetup: () => api.post('/auth/mfa/setup'),
+  mfaConfirm: (code: string) => api.post('/auth/mfa/setup/confirm', { code }),
   logout: (refresh_token: string) =>
     api.post('/auth/logout', { refresh_token }),
 }
