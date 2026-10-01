@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { buttonClass } from '@/components/ui/button-styles'
 import { orderApi } from '@/lib/api'
+import { usePaymentSync } from '@/lib/usePaymentSync'
 import { cn, formatPrice, ORDER_STATUS } from '@/lib/utils'
 
 type Row = Record<string, unknown>
@@ -40,6 +41,7 @@ export default function OrderPage() {
     },
   })
   const order = (orders.data ?? []).find((o) => String(o.id) === id)
+  usePaymentSync(orders.data)
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-10">
@@ -78,7 +80,7 @@ function OrderView({ order }: { order: Row }) {
         <div className="flex items-center gap-2 print:hidden">
           <Badge>{ORDER_STATUS[status] ?? status}</Badge>
           {status === 'pending' && typeof order.checkout_url === 'string' && (
-            <a href={order.checkout_url} className={buttonClass('default', 'sm')}>Pay now</a>
+            <a href={order.checkout_url} className={buttonClass('default', 'sm')}>Complete checkout</a>
           )}
         </div>
       </div>
@@ -115,6 +117,19 @@ function OrderView({ order }: { order: Row }) {
         </ol>
         {side && <p className="mt-2 rounded-lg bg-secondary px-4 py-3 text-sm">{side}</p>}
       </section>
+
+      {order.delivery_address ? (
+        <section className="mt-8 rounded-xl border border-border bg-card p-6">
+          <h2 className="font-semibold">Delivery</h2>
+          <address className="mt-3 text-sm not-italic leading-relaxed text-muted-foreground">
+            <span className="font-medium text-foreground">{String(order.delivery_name)}</span><br />
+            {String(order.delivery_address)}<br />
+            {[order.delivery_city, order.delivery_state].filter(Boolean).join(', ')}<br />
+            {String(order.delivery_phone)}
+          </address>
+          {order.delivery_notes ? <p className="mt-2 text-sm text-muted-foreground">Note: {String(order.delivery_notes)}</p> : null}
+        </section>
+      ) : null}
 
       <section className="mt-8 rounded-xl border border-border bg-card p-6" aria-label="Receipt">
         <div className="flex items-center justify-between">

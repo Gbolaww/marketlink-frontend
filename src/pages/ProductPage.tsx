@@ -1,17 +1,17 @@
 import { useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import { useMutation, useQuery } from '@tanstack/react-query'
-import { ArrowLeft, BadgeCheck, Check, Loader2, MapPin, Minus, Plus, ShieldCheck } from 'lucide-react'
+import { useQuery } from '@tanstack/react-query'
+import { ArrowLeft, BadgeCheck, Check, MapPin, Minus, Plus, ShieldCheck } from 'lucide-react'
 import ProductImage from '@/components/ProductImage'
 import type { ProductResult } from '@/components/ProductCard'
 import RatingStars from '@/components/RatingStars'
 import { Button } from '@/components/ui/button'
 import { buttonClass } from '@/components/ui/button-styles'
-import { assetUrl, orderApi, productApi } from '@/lib/api'
+import { assetUrl, productApi } from '@/lib/api'
 import { getUser, isLoggedIn } from '@/lib/auth'
 import { addToCart, wouldMixVendors } from '@/lib/cart'
 import { getRememberedProduct } from '@/lib/products'
-import { apiError, formatDistance, formatPrice } from '@/lib/utils'
+import { formatDistance, formatPrice } from '@/lib/utils'
 
 type Row = Record<string, unknown>
 
@@ -46,14 +46,6 @@ export default function ProductPage() {
       }
     : seen
 
-  const buy = useMutation({
-    mutationFn: async () => (await orderApi.createOrder({ items: [{ product_id: id, quantity }] })).data,
-    onSuccess: (order) => {
-      if (order?.checkout_url) window.location.href = order.checkout_url
-      else navigate('/account')
-    },
-  })
-
   if (!product && fresh.isLoading) {
     return <div className="mx-auto max-w-5xl px-4 py-10"><div className="h-96 animate-pulse rounded-xl bg-muted" /></div>
   }
@@ -74,22 +66,29 @@ export default function ProductPage() {
   const soldOut = stock != null && stock <= 0
   const maxQty = stock != null ? Math.max(1, Math.min(99, stock)) : 99
 
-  const onAdd = () => {
+  /** Returns false if the shopper declined to start a new cart. */
+  const put = () => {
     const vendor = { id: product.vendor_id, name: product.business_name }
-    if (wouldMixVendors(product.vendor_id) && !window.confirm('Your cart has items from another vendor. Start a new cart with this item?')) return
+    const mixing = wouldMixVendors(product.vendor_id)
+    if (mixing && !window.confirm('Your cart has items from another vendor. Start a new cart with this item?')) return false
     addToCart(
       { product_id: product.product_id, name: product.name, price_minor: product.price_minor, currency: product.currency ?? 'NGN', image_url: product.image_url ?? null },
       vendor,
       quantity,
-      wouldMixVendors(product.vendor_id),
+      mixing,
     )
+    return true
+  }
+
+  const onAdd = () => {
+    if (!put()) return
     setAdded(true)
     window.setTimeout(() => setAdded(false), 2500)
   }
 
   const onBuy = () => {
     if (!user) return navigate('/auth')
-    buy.mutate()
+    if (put()) navigate('/checkout')
   }
 
   return (
@@ -145,8 +144,7 @@ export default function ProductPage() {
                 <Button size="lg" variant="outline" onClick={onAdd}>
                   {added ? <><Check /> Added</> : 'Add to cart'}
                 </Button>
-                <Button size="lg" disabled={buy.isPending} onClick={onBuy}>
-                  {buy.isPending && <Loader2 className="animate-spin" />}
+                <Button size="lg" onClick={onBuy}>
                   {user ? 'Buy now' : 'Sign in to buy'}
                 </Button>
               </div>
@@ -154,7 +152,6 @@ export default function ProductPage() {
             {added && (
               <Link to="/cart" className="mt-3 block text-center text-sm font-semibold text-primary hover:underline">View cart</Link>
             )}
-            {buy.isError && <p role="alert" className="mt-3 text-sm text-destructive">{apiError(buy.error)}</p>}
             <p className="mt-4 flex items-start gap-2 text-xs text-muted-foreground">
               <ShieldCheck size={14} className="mt-0.5 shrink-0" />
               Your payment is held by MarketLink until the vendor marks the order fulfilled.

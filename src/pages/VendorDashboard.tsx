@@ -267,7 +267,7 @@ export default function VendorDashboard() {
               return (
                 <QueryState loading={orders.isLoading} error={orders.isError}>
                   <DataTable
-                    head={['Order', 'Date', 'Total', 'Status', '']}
+                    head={['Order', 'Date', 'Total', 'Deliver to', 'Status', '']}
                     empty="No orders yet."
                     rows={orderRows.map((o) => {
                       const st = String(o.status ?? '')
@@ -275,6 +275,13 @@ export default function VendorDashboard() {
                         String(pick(o, 'order_number') ?? String(o.id).slice(0, 8)),
                         formatDate(o.created_at),
                         formatPrice(total(o), pick<string>(o, 'currency', 'currency_code') ?? currency),
+                        o.delivery_address ? (
+                          <span key="d" className="block max-w-56 text-xs leading-snug">
+                            <span className="font-medium text-foreground">{String(o.delivery_name)}</span>, {String(o.delivery_phone)}<br />
+                            {String(o.delivery_address)}, {String(o.delivery_city)}, {String(o.delivery_state)}
+                            {o.delivery_notes ? <><br /><em>{String(o.delivery_notes)}</em></> : null}
+                          </span>
+                        ) : '—',
                         ORDER_STATUS[st] ?? st,
                         st === 'paid' ? (
                           <Button key="f" size="sm" variant="outline" disabled={fulfil.isPending} onClick={() => fulfil.mutate(String(o.id))}>

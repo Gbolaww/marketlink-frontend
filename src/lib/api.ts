@@ -87,10 +87,21 @@ export const productApi = {
   get: (id: string) => api.get('/products/' + id),
 }
 
+export interface DeliveryDetails {
+  name: string
+  phone: string
+  address: string
+  city: string
+  state: string
+  notes?: string
+}
+
 export const orderApi = {
-  createOrder: (data: { items: { product_id: string; quantity: number }[] }) =>
+  createOrder: (data: { items: { product_id: string; quantity: number }[]; delivery?: DeliveryDetails }) =>
     api.post('/orders', data),
   getMyOrders: () => api.get('/orders/me'),
+  /** Ask the backend to confirm the payment directly with Paystack (does not rely on the webhook). */
+  verifyPayment: (reference: string) => api.post('/orders/verify', { reference }),
 }
 
 export const adminApi = {

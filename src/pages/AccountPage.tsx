@@ -7,6 +7,7 @@ import { buttonClass } from '@/components/ui/button-styles'
 import { Tabs } from '@/components/ui/tabs'
 import { orderApi } from '@/lib/api'
 import { getUser } from '@/lib/auth'
+import { usePaymentSync } from '@/lib/usePaymentSync'
 import { ORDER_STATUS, formatDate, formatPrice, pick } from '@/lib/utils'
 
 type Row = Record<string, unknown>
@@ -20,6 +21,8 @@ export default function AccountPage() {
       return (Array.isArray(data) ? data : (data?.orders ?? data?.items ?? [])) as Row[]
     },
   })
+
+  usePaymentSync(orders.data)
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-10">
@@ -60,7 +63,7 @@ export default function AccountPage() {
                             <div className="flex items-center gap-3">
                               <Badge>{ORDER_STATUS[status] ?? status}</Badge>
                               {status === 'pending' && typeof o.checkout_url === 'string' && (
-                                <a href={o.checkout_url} className={buttonClass('default', 'sm')}>Pay now</a>
+                                <a href={o.checkout_url} className={buttonClass('default', 'sm')}>Complete checkout</a>
                               )}
                             </div>
                           </div>

@@ -8,6 +8,7 @@ import ProductPage from '@/pages/ProductPage'
 import OrderCallbackPage from '@/pages/OrderCallbackPage'
 import SecurityPage from '@/pages/SecurityPage'
 import CartPage from '@/pages/CartPage'
+import CheckoutPage from '@/pages/CheckoutPage'
 import OrderPage from '@/pages/OrderPage'
 import AccountPage from '@/pages/AccountPage'
 import VendorDashboard from '@/pages/VendorDashboard'
@@ -31,6 +32,9 @@ export default function App() {
         <Route path="/search" element={<SearchPage />} />
         <Route path="/product/:id" element={<ProductPage />} />
         <Route path="/cart" element={<CartPage />} />
+        <Route path="/checkout" element={
+          <ProtectedRoute role="customer"><CheckoutPage /></ProtectedRoute>
+        } />
         <Route path="/orders/:id" element={
           <ProtectedRoute role="customer"><OrderPage /></ProtectedRoute>
         } />

@@ -1,29 +1,17 @@
 import { Link, useNavigate } from 'react-router-dom'
-import { useMutation } from '@tanstack/react-query'
-import { Loader2, Minus, Plus, ShoppingBag, Trash2 } from 'lucide-react'
+import { Minus, Plus, ShoppingBag, Trash2 } from 'lucide-react'
 import ProductImage from '@/components/ProductImage'
 import { Button } from '@/components/ui/button'
 import { buttonClass } from '@/components/ui/button-styles'
-import { orderApi } from '@/lib/api'
 import { getUser, isLoggedIn } from '@/lib/auth'
-import { cartTotal, clearCart, removeFromCart, setQuantity, useCart } from '@/lib/cart'
-import { apiError, formatPrice } from '@/lib/utils'
+import { cartTotal, removeFromCart, setQuantity, useCart } from '@/lib/cart'
+import { formatPrice } from '@/lib/utils'
 
 export default function CartPage() {
   const cart = useCart()
   const navigate = useNavigate()
   const user = isLoggedIn() ? getUser() : null
   const currency = cart.items[0]?.currency ?? 'NGN'
-
-  const checkout = useMutation({
-    mutationFn: async () =>
-      (await orderApi.createOrder({ items: cart.items.map((i) => ({ product_id: i.product_id, quantity: i.quantity })) })).data,
-    onSuccess: (order) => {
-      clearCart()
-      if (order?.checkout_url) window.location.href = order.checkout_url
-      else navigate('/account')
-    },
-  })
 
   if (cart.items.length === 0) {
     return (
@@ -36,10 +24,7 @@ export default function CartPage() {
     )
   }
 
-  const onCheckout = () => {
-    if (!user) return navigate('/auth')
-    checkout.mutate()
-  }
+  const onCheckout = () => navigate(user ? '/checkout' : '/auth')
 
   return (
     <div className="mx-auto max-w-4xl px-4 py-10">
@@ -84,12 +69,10 @@ export default function CartPage() {
           {user && user.role !== 'customer' ? (
             <p className="mt-4 text-sm text-muted-foreground">Sign in with a customer account to check out.</p>
           ) : (
-            <Button size="lg" className="mt-4 w-full" disabled={checkout.isPending} onClick={onCheckout}>
-              {checkout.isPending && <Loader2 className="animate-spin" />}
-              {user ? 'Pay securely' : 'Sign in to check out'}
+            <Button size="lg" className="mt-4 w-full" onClick={onCheckout}>
+              {user ? 'Checkout' : 'Sign in to check out'}
             </Button>
           )}
-          {checkout.isError && <p role="alert" className="mt-3 text-sm text-destructive">{apiError(checkout.error)}</p>}
           <p className="mt-4 text-xs text-muted-foreground">Your payment is held by MarketLink until the vendor marks the order fulfilled.</p>
         </aside>
       </div>
