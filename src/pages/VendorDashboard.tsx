@@ -175,6 +175,17 @@ export default function VendorDashboard() {
         <Button onClick={() => setAdding(true)}><Plus /> Add product</Button>
       </div>
 
+      {status !== 'approved' && (
+        <div role="status" className="mt-6 rounded-xl border border-warning/40 bg-warning/10 px-5 py-4 text-sm">
+          <p className="font-semibold">
+            {status === 'rejected' ? 'Your store application was rejected.' : 'Your store is waiting for approval.'}
+          </p>
+          <p className="mt-1 text-muted-foreground">
+            Products you add are saved, but they won't appear in the marketplace until MarketLink approves your store.
+          </p>
+        </div>
+      )}
+
       {adding && (
         <AddProduct
           onCancel={() => setAdding(false)}
