@@ -1,6 +1,7 @@
 import axios from 'axios'
 
-const BASE_URL: string = import.meta.env.VITE_API_URL ?? 'http://127.0.0.1:8000'
+export const API_BASE_URL: string = import.meta.env.VITE_API_URL ?? 'http://127.0.0.1:8000'
+const BASE_URL = API_BASE_URL
 
 /** Turn an API-relative path such as /uploads/x.jpg into a full URL the browser can load. */
 export const assetUrl = (path?: string | null): string | null =>
