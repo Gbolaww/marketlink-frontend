@@ -97,7 +97,7 @@ export default function ProductPage() {
         <ArrowLeft size={16} /> Back to results
       </Link>
 
-      <div className="mt-6 grid gap-10 md:grid-cols-2">
+      <div className="mt-6 grid grid-cols-1 gap-10 md:grid-cols-2">
         <div className="aspect-[4/3] overflow-hidden rounded-xl border border-border bg-muted">
           <ProductImage src={product.image_url} name={product.name} className="text-7xl" />
         </div>
@@ -140,7 +140,7 @@ export default function ProductPage() {
             ) : user && user.role !== 'customer' ? (
               <p className="mt-4 text-sm text-muted-foreground">Sign in with a customer account to buy this product.</p>
             ) : (
-              <div className="mt-4 grid gap-2 sm:grid-cols-2">
+              <div className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-2">
                 <Button size="lg" variant="outline" onClick={onAdd}>
                   {added ? <><Check /> Added</> : 'Add to cart'}
                 </Button>

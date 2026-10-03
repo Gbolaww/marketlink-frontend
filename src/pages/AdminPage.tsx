@@ -83,7 +83,7 @@ export default function AdminPage() {
           ]}
           render={(tab) =>
             tab === 'regions' ? (
-              <div className="grid gap-4 sm:grid-cols-3">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
                 {REGIONS.map((r) => (
                   <div key={r.region} className="rounded-xl border border-border bg-card p-5">
                     <p className="font-semibold">{r.region}</p>

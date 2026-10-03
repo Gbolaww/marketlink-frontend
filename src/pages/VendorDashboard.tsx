@@ -89,7 +89,7 @@ function AddProduct({ onDone, onCancel }: { onDone: () => void; onCancel: () => 
   return (
     <form
       onSubmit={(e) => { e.preventDefault(); create.mutate() }}
-      className="mt-6 grid gap-4 rounded-xl border border-border bg-card p-6 shadow-card sm:grid-cols-2"
+      className="mt-6 grid grid-cols-1 gap-4 rounded-xl border border-border bg-card p-6 shadow-card sm:grid-cols-2"
     >
       <Field label="Product name"><Input value={name} onChange={(e) => setName(e.target.value)} required /></Field>
       <Field label="Price (₦)"><Input type="number" min="0" step="0.01" value={price} onChange={(e) => setPrice(e.target.value)} required /></Field>
@@ -148,7 +148,7 @@ function EditProduct({ product, onDone, onCancel }: { product: Row; onDone: () =
     <form
       ref={formRef}
       onSubmit={(e) => { e.preventDefault(); save.mutate() }}
-      className="mb-6 grid gap-4 rounded-xl border border-primary/30 bg-card p-6 shadow-card sm:grid-cols-2"
+      className="mb-6 grid grid-cols-1 gap-4 rounded-xl border border-primary/30 bg-card p-6 shadow-card sm:grid-cols-2"
     >
       <h3 className="font-semibold sm:col-span-2">Edit product</h3>
       <Field label="Product name"><Input value={name} onChange={(e) => setName(e.target.value)} required maxLength={200} /></Field>
@@ -354,7 +354,7 @@ export default function VendorDashboard() {
         />
       )}
 
-      <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard label="Revenue" value={formatPrice(revenue, currency)} />
         <StatCard label="Orders" value={String(orderRows.length)} />
         <StatCard label="Live listings" value={String((products.data ?? []).length)} />
@@ -450,7 +450,7 @@ export default function VendorDashboard() {
               return locations.length === 0 ? (
                 <EmptyState title="No locations yet" body="Add a location so nearby customers can find you." />
               ) : (
-                <div className="grid gap-4 sm:grid-cols-2">
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   {locations.map((l, i) => (
                     <div key={i} className="rounded-xl border border-border bg-card p-5">
                       <p className="font-semibold">{String(pick(l, 'label') ?? 'Store location')}</p>
@@ -460,7 +460,7 @@ export default function VendorDashboard() {
                 </div>
               )
             return (
-              <div className="grid gap-4 sm:grid-cols-3">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
                 <StatCard label="Average rating" value={rating.toFixed(1)} hint={(pick(p, 'rating_count') ?? 0) + ' reviews'} />
                 <StatCard label="Average order value" value={formatPrice(orderRows.length ? revenue / orderRows.length : 0, currency)} />
                 <StatCard label="Fulfilled orders" value={String(fulfilled)} />

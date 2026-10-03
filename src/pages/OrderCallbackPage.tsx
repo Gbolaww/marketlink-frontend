@@ -124,7 +124,7 @@ export default function OrderCallbackPage() {
       </div>
 
       <section className="mt-10 rounded-xl border border-border bg-card p-6 shadow-card">
-        <dl className="grid gap-4 text-sm sm:grid-cols-3">
+        <dl className="grid grid-cols-1 gap-4 text-sm sm:grid-cols-3">
           <div><dt className="text-muted-foreground">Order number</dt><dd className="mt-0.5 font-mono font-semibold">{ref}</dd></div>
           <div><dt className="text-muted-foreground">Date</dt><dd className="mt-0.5 font-medium">{when(order.created_at)}</dd></div>
           <div><dt className="text-muted-foreground">Amount paid</dt><dd className="mt-0.5 font-semibold">{formatPrice(Number(order.total_minor_units ?? 0), currency)}</dd></div>

@@ -1,5 +1,12 @@
+import { twMerge } from 'tailwind-merge'
+
+/**
+ * Joins class names and lets the LAST one win when two set the same thing (for example `size-8` over `size-10`, or
+ * `hidden` over `inline-flex`). A plain join leaves both in the CSS, where the one that happens to be defined later
+ * wins, so a class meant to hide something on phones could silently do nothing.
+ */
 export function cn(...parts: Array<string | false | null | undefined>): string {
-  return parts.filter(Boolean).join(' ')
+  return twMerge(parts.filter(Boolean).join(' '))
 }
 
 export function formatPrice(minor: number | null | undefined, currency = 'NGN'): string {

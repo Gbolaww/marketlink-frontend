@@ -70,11 +70,11 @@ export default function CheckoutPage() {
       <h1 className="mt-4 text-3xl font-extrabold">Checkout</h1>
       <p className="mt-2 text-muted-foreground">Tell {cart.vendorName ?? 'the vendor'} where to deliver your order.</p>
 
-      <form onSubmit={onSubmit} className="mt-8 grid gap-8 lg:grid-cols-[1fr_22rem]">
+      <form onSubmit={onSubmit} className="mt-8 grid grid-cols-1 gap-8 lg:grid-cols-[1fr_22rem]">
         <div className="space-y-8">
           <section className="rounded-xl border border-border bg-card p-6 shadow-card">
             <h2 className="font-semibold">Contact</h2>
-            <div className="mt-4 grid gap-4 sm:grid-cols-2">
+            <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
               <Field label="Full name">
                 <Input value={form.name} onChange={set('name')} autoComplete="name" required minLength={2} maxLength={120} />
               </Field>
@@ -87,7 +87,7 @@ export default function CheckoutPage() {
 
           <section className="rounded-xl border border-border bg-card p-6 shadow-card">
             <h2 className="font-semibold">Delivery address</h2>
-            <div className="mt-4 grid gap-4 sm:grid-cols-2">
+            <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div className="sm:col-span-2">
                 <Field label="Street address">
                   <Input value={form.address} onChange={set('address')} autoComplete="street-address" placeholder="House number and street" required minLength={5} maxLength={300} />
