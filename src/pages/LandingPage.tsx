@@ -10,7 +10,8 @@ import { buttonClass } from '@/components/ui/button-styles'
 import { Input } from '@/components/ui/input'
 import { searchApi } from '@/lib/api'
 import { rememberProducts, toProduct } from '@/lib/products'
-import { CATEGORIES, DEFAULT_ORIGIN } from '@/lib/categories'
+import { CATEGORIES } from '@/lib/categories'
+import { openLocationDialog, useSearchLocation } from '@/lib/location'
 import { formatDistance } from '@/lib/utils'
 
 const STEPS = [
@@ -24,10 +25,12 @@ export default function LandingPage() {
   const navigate = useNavigate()
   const [q, setQ] = useState('')
 
+  const loc = useSearchLocation()
+
   const featured = useQuery({
-    queryKey: ['featured-products'],
+    queryKey: ['featured-products', loc.lat, loc.lon],
     queryFn: async () => {
-      const { data } = await searchApi.search({ ...DEFAULT_ORIGIN, radius_km: 100 })
+      const { data } = await searchApi.search({ lat: loc.lat, lon: loc.lon, radius_km: 100, limit: 40 })
       const rows = (Array.isArray(data) ? data : (data?.results ?? [])) as Record<string, unknown>[]
       return rememberProducts(rows.map(toProduct)) as ProductResult[]
     },
@@ -88,25 +91,36 @@ export default function LandingPage() {
       </section>
 
       <section className="mx-auto max-w-6xl px-4 py-16">
-        <div className="flex items-end justify-between gap-4">
-          <h2 className="text-2xl font-bold sm:text-3xl">Products near you</h2>
+        <div className="flex flex-wrap items-end justify-between gap-x-4 gap-y-2">
+          <div className="min-w-0">
+            <h2 className="text-2xl font-bold sm:text-3xl">Products near you</h2>
+            <p className="mt-1 text-sm text-muted-foreground">
+              {loc.isDefault ? 'Showing vendors near ' + loc.label + ' until you set your location. ' : 'Showing vendors near ' + loc.label + '. '}
+              <button type="button" onClick={openLocationDialog} className="cursor-pointer font-semibold text-primary hover:underline">
+                {loc.isDefault ? 'Set my location' : 'Change location'}
+              </button>
+            </p>
+          </div>
           <Link to="/search" className="text-sm font-semibold text-primary hover:underline">See all products</Link>
         </div>
-        <div className="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-5 lg:grid-cols-4">
           {featured.isLoading
             ? Array.from({ length: 4 }).map((_, i) => <div key={i} className="h-72 animate-pulse rounded-xl bg-muted" />)
             : products.map((p) => <ProductCard key={p.product_id} item={p} />)}
         </div>
         {featured.isError && <p className="mt-6 text-sm text-destructive">We couldn't load products right now.</p>}
         {featured.isSuccess && products.length === 0 && (
-          <p className="mt-6 text-sm text-muted-foreground">No products listed near you yet.</p>
+          <p className="mt-6 text-sm text-muted-foreground">
+            No products listed near {loc.label} yet.{' '}
+            <button type="button" onClick={openLocationDialog} className="cursor-pointer font-semibold text-primary hover:underline">Try another location</button>
+          </p>
         )}
       </section>
 
       <section className="border-y border-border bg-card">
         <div className="mx-auto max-w-6xl px-4 py-16">
           <h2 className="text-2xl font-bold sm:text-3xl">How MarketLink works</h2>
-          <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
             {STEPS.map((s) => (
               <div key={s.title} className="rounded-xl border border-border p-5">
                 <span className="grid size-10 place-items-center rounded-lg bg-secondary text-primary">
@@ -123,7 +137,7 @@ export default function LandingPage() {
       {vendors.length > 0 && (
         <section className="mx-auto max-w-6xl px-4 py-16">
           <h2 className="text-2xl font-bold sm:text-3xl">Verified vendors</h2>
-          <div className="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="mt-6 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {vendors.map((v) => (
               <Link
                 key={v.business_name}

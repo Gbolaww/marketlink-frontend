@@ -62,6 +62,8 @@
     color: var(--foreground);
     font-family: var(--font-body);
     -webkit-font-smoothing: antialiased;
+    /* Long unbroken text (an email address, a long product name) wraps instead of pushing the page sideways. */
+    overflow-wrap: break-word;
   }
   h1, h2, h3, h4 { font-family: var(--font-display); letter-spacing: -0.02em; }
   :focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; }

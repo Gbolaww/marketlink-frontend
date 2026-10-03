@@ -29,9 +29,9 @@ export default function ProductCard({ item }: { item: ProductResult }) {
       <div className="aspect-[4/3] w-full overflow-hidden bg-muted">
         <ProductImage src={item.image_url} name={item.name} className="transition-transform duration-300 group-hover:scale-[1.03]" />
       </div>
-      <div className="flex flex-1 flex-col gap-2 p-4">
-        <h3 className="line-clamp-2 text-base font-semibold leading-snug">{item.name}</h3>
-        <p className="text-lg font-bold text-primary">{formatPrice(item.price_minor, item.currency)}</p>
+      <div className="flex flex-1 flex-col gap-1.5 p-3 sm:gap-2 sm:p-4">
+        <h3 className="line-clamp-2 text-sm font-semibold sm:text-base leading-snug">{item.name}</h3>
+        <p className="text-base font-bold text-primary sm:text-lg">{formatPrice(item.price_minor, item.currency)}</p>
         <div className="mt-auto space-y-1 text-xs text-muted-foreground">
           {item.business_name && <p className="truncate font-medium text-foreground">{item.business_name}</p>}
           {item.rating_avg != null && <RatingStars value={item.rating_avg} count={item.rating_count} />}

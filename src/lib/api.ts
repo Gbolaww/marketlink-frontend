@@ -49,7 +49,7 @@ export const authApi = {
 }
 
 export const searchApi = {
-  search: (params: { lat: number; lon: number; q?: string; radius_km?: number }) =>
+  search: (params: { lat: number; lon: number; q?: string; radius_km?: number; limit?: number }) =>
     api.get('/search', { params }),
 }
 

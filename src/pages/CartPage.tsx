@@ -31,7 +31,7 @@ export default function CartPage() {
       <h1 className="text-3xl font-extrabold">Your cart</h1>
       {cart.vendorName && <p className="mt-2 text-muted-foreground">Items from {cart.vendorName}</p>}
 
-      <div className="mt-8 grid gap-8 lg:grid-cols-[1fr_20rem]">
+      <div className="mt-8 grid grid-cols-1 gap-8 lg:grid-cols-[1fr_20rem]">
         <ul className="divide-y divide-border rounded-xl border border-border bg-card">
           {cart.items.map((i) => (
             <li key={i.product_id} className="flex gap-4 p-4">
@@ -41,7 +41,7 @@ export default function CartPage() {
               <div className="flex min-w-0 flex-1 flex-col">
                 <Link to={'/product/' + i.product_id} className="line-clamp-2 font-semibold leading-snug hover:underline">{i.name}</Link>
                 <p className="mt-1 text-sm text-muted-foreground">{formatPrice(i.price_minor, i.currency)} each</p>
-                <div className="mt-auto flex items-center justify-between pt-3">
+                <div className="mt-auto flex flex-wrap items-center justify-between gap-x-3 gap-y-2 pt-3">
                   <div className="flex items-center gap-2">
                     <Button variant="outline" size="icon" className="size-8" aria-label="Decrease quantity" disabled={i.quantity <= 1} onClick={() => setQuantity(i.product_id, i.quantity - 1)}><Minus /></Button>
                     <span className="w-6 text-center text-sm font-semibold">{i.quantity}</span>

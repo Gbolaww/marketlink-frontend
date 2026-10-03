@@ -137,7 +137,7 @@ function OrderView({ order }: { order: Row }) {
           <Button variant="outline" size="sm" className="print:hidden" onClick={() => window.print()}><Printer /> Print</Button>
         </div>
 
-        <dl className="mt-4 grid gap-3 text-sm sm:grid-cols-2">
+        <dl className="mt-4 grid grid-cols-1 gap-3 text-sm sm:grid-cols-2">
           <div><dt className="text-muted-foreground">Order number</dt><dd className="font-mono font-medium">{ref}</dd></div>
           <div><dt className="text-muted-foreground">Date</dt><dd className="font-medium">{when(order.created_at)}</dd></div>
           <div><dt className="text-muted-foreground">Paid with</dt><dd className="font-medium capitalize">{String(order.payment_processor ?? 'paystack')}</dd></div>

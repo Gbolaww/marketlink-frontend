@@ -92,7 +92,7 @@ export default function AuthPage() {
 
   return (
     <div className="overflow-x-clip">
-    <div className="mx-auto grid max-w-5xl gap-10 px-4 py-16 lg:grid-cols-2">
+    <div className="mx-auto grid grid-cols-1 max-w-5xl gap-10 px-4 py-16 lg:grid-cols-2">
       <div>
         <h1 className="text-3xl font-extrabold sm:text-4xl">Welcome to MarketLink</h1>
         <p className="mt-4 text-muted-foreground">
